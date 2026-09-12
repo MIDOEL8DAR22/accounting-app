@@ -47,6 +47,7 @@ export function Accountant() {
   const [aiOn, setAiOn] = useState(() => getProgress().aiAssistant !== false)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiOnline, setAiOnline] = useState<boolean | null>(null)
+  const [quota, setQuota] = useState<{ used: number; limit: number } | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -65,14 +66,17 @@ export function Accountant() {
       return
     }
     push({ id: Date.now(), role: 'bot', text: 'جاري فحص الاتصال بالذكاء الحي المجاني...' })
-    const ok = await pingLiveAI()
-    setAiOnline(ok)
+    const r = await pingLiveAI()
+    setAiOnline(r.ok)
+    if (r.limit !== null && r.used !== null) setQuota({ used: r.used, limit: r.limit })
     push({
       id: Date.now(),
       role: 'bot',
-      text: ok
-        ? 'تم التفعيل — الاتصال بالذكاء الحي المجاني شغّال. ابعت أي سؤال وهييجاوبك على طول.'
-        : 'تم التفعيل بس الاتصال بالذكاء الحي مش متاح دلوقتي — هيرد عليك الردود الجاهزة مع رسالة توضح السبب لو فشل الاتصال.',
+      text: r.limited
+        ? `تم التفعيل بس وصلت لنهاية حصة أسئلة الذكاء الحر النهارده (${r.used} من ${r.limit}) — الحصة بتتجدد بكرة لوحدها. حالياً هيرد عليك الردود الجاهزة.`
+        : r.ok
+          ? 'تم التفعيل — الاتصال بالذكاء الحي المجاني شغّال. ابعت أي سؤال وهييجاوبك على طول.'
+          : 'تم التفعيل بس الاتصال بالذكاء الحي مش متاح دلوقتي — هيرد عليك الردود الجاهزة مع رسالة توضح السبب لو فشل الاتصال.',
     })
   }
 
@@ -146,8 +150,21 @@ export function Accountant() {
         timeoutTimer = window.setTimeout(() => reject(new Error('timeout')), 45000)
       })
       const aiText = await Promise.race([aiPromise, timeoutPromise])
-      push({ id: Date.now(), role: 'bot', text: aiText })
-    } catch {
+      if (aiText.limit !== null && aiText.used !== null) setQuota({ used: aiText.used, limit: aiText.limit })
+      push({ id: Date.now(), role: 'bot', text: aiText.text })
+    } catch (e) {
+      const err = e as Error & { code?: string; used?: unknown; limit?: unknown }
+      if (err.code === 'daily-limit') {
+        const used = typeof err.used === 'number' ? err.used : 0
+        const limit = typeof err.limit === 'number' ? err.limit : 0
+        if (limit > 0) setQuota({ used, limit })
+        push({
+          id: Date.now(),
+          role: 'bot',
+          text: `وصلت لنهاية حصة أسئلة الذكاء الحر النهارده (${used} من ${limit}) — الحصة بتتجدد بكرة لوحدها.\n\nرد القواعد الجاهز:\n\n${reply.text}`,
+        })
+        return
+      }
       push({
         id: Date.now(),
         role: 'bot',
@@ -184,6 +201,18 @@ export function Accountant() {
               <IconSpark size={13} />
               الذكاء الحي: {aiOn ? (aiOnline === null ? 'جدّي' : aiOnline ? 'متصّل' : 'مش متاح') : 'مطفى'}
             </button>
+            {quota && (
+              <span
+                className={cn(
+                  'rounded-full border px-2.5 py-1.5 text-[11px] font-bold',
+                  quota.used >= quota.limit
+                    ? 'bg-red-50 text-red-600 border-red-200'
+                    : 'bg-amber-50 text-amber-800 border-amber-200'
+                )}
+              >
+                ذكاء اليوم: {quota.used}/{quota.limit}
+              </span>
+            )}
             {interview?.active && (
               <Badge color="green">مقابلة جارية</Badge>
             )}

@@ -10,11 +10,42 @@ const MAX_TOTAL_CHARS = 8000
 const MAX_MESSAGES = 12
 const MAX_OUTPUT_TOKENS = 700
 
-function json(data, status = 200) {
+const DAILY_GLOBAL_BUDGET = 100
+const MAX_TRACKED_USERS = 200
+
+function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS, ...extraHeaders },
   })
+}
+
+async function readQuota(env, ip) {
+  const today = new Date().toISOString().slice(0, 10)
+  const usersKey = `users:${today}`
+  const userKey = `user:${today}:${ip}`
+  const [usersRaw, usedRaw] = await Promise.all([env.AI_LIMITS.get(usersKey), env.AI_LIMITS.get(userKey)])
+  let users = []
+  try {
+    const parsed = usersRaw ? JSON.parse(usersRaw) : []
+    if (Array.isArray(parsed)) users = parsed
+  } catch {
+    users = []
+  }
+  let used = 0
+  if (usedRaw) {
+    const n = parseInt(usedRaw, 10)
+    if (!Number.isNaN(n)) used = n
+  }
+  const isNew = !users.includes(ip)
+  const changed = isNew && users.length < MAX_TRACKED_USERS
+  if (changed) {
+    users.push(ip)
+    await env.AI_LIMITS.put(usersKey, JSON.stringify(users))
+  }
+  const totalUsers = Math.max(1, users.length)
+  const perUserLimit = Math.max(1, Math.floor(DAILY_GLOBAL_BUDGET / totalUsers))
+  return { userKey, used, perUserLimit, totalUsers }
 }
 
 export default {
@@ -47,6 +78,28 @@ export default {
 
     const model = typeof body?.model === 'string' && body.model ? body.model : DEFAULT_MODEL
 
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown'
+    const quotaHeaders = (used, limit, users) => ({
+      'x-ai-day-used': String(used),
+      'x-ai-day-limit': String(limit),
+      'x-ai-users': String(users),
+    })
+
+    let quota
+    try {
+      quota = await readQuota(env, ip)
+    } catch {
+      quota = { userKey: null, used: 0, perUserLimit: Number.MAX_SAFE_INTEGER, totalUsers: 1 }
+    }
+
+    if (quota.used >= quota.perUserLimit) {
+      return json(
+        { error: 'daily-limit', used: quota.used, limit: quota.perUserLimit, users: quota.totalUsers },
+        429,
+        quotaHeaders(quota.used, quota.perUserLimit, quota.totalUsers)
+      )
+    }
+
     try {
       const out = await env.AI.run(model, {
         messages: messages.slice(0, MAX_MESSAGES),
@@ -57,9 +110,14 @@ export default {
       if (typeof content !== 'string' || content.trim() === '') {
         return json({ error: 'empty-response' }, 502)
       }
-      return json({
-        choices: [{ message: { role: 'assistant', content } }],
-      })
+      if (quota.userKey) {
+        await env.AI_LIMITS.put(quota.userKey, String(quota.used + 1)).catch(() => {})
+      }
+      return json(
+        { choices: [{ message: { role: 'assistant', content } }] },
+        200,
+        quotaHeaders(quota.used + 1, quota.perUserLimit, quota.totalUsers)
+      )
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       if (/free|quota|limit|exceeded|insufficient/i.test(msg)) {

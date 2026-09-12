@@ -2,5 +2,11 @@
   "name": "accounting-ai",
   "main": "src/index.js",
   "compatibility_date": "2026-09-05",
-  "ai": { "binding": "AI" }
+  "ai": { "binding": "AI" },
+  "kv_namespaces": [
+    {
+      "binding": "AI_LIMITS",
+      "id": "9d19a26c5091499ab6ef7375ec7e1bc1"
+    }
+  ]
 }

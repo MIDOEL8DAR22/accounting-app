@@ -224,7 +224,31 @@ const SYSTEM_PROMPT =
 إلى حـ (الحساب الدائن) المبلغ
 قدم نصائح عملية قصيرة من الواقع، ولو السؤال مش واضح اطلب التوضيح.`
 
-export async function askLiveAI(messages: ChatMsg[], signal?: AbortSignal): Promise<string> {
+export interface LiveAIResult {
+  text: string
+  used: number | null
+  limit: number | null
+}
+
+export interface PingResult {
+  ok: boolean
+  used: number | null
+  limit: number | null
+  limited: boolean
+}
+
+function readQuota(res: Response): { used: number | null; limit: number | null } {
+  const usedRaw = res.headers.get('x-ai-day-used')
+  const limitRaw = res.headers.get('x-ai-day-limit')
+  const used = usedRaw === null ? null : Number(usedRaw)
+  const limit = limitRaw === null ? null : Number(limitRaw)
+  return {
+    used: used !== null && Number.isFinite(used) ? used : null,
+    limit: limit !== null && Number.isFinite(limit) ? limit : null,
+  }
+}
+
+export async function askLiveAI(messages: ChatMsg[], signal?: AbortSignal): Promise<LiveAIResult> {
   if (typeof fetch === 'undefined') throw new Error('web-unavailable')
   const res = await fetch(AI_ENDPOINT, {
     method: 'POST',
@@ -232,15 +256,21 @@ export async function askLiveAI(messages: ChatMsg[], signal?: AbortSignal): Prom
     body: JSON.stringify({ model: AI_MODEL, messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages] }),
     signal,
   })
-  if (!res.ok) throw new Error(`http-${res.status}`)
+  const quota = readQuota(res)
+  if (!res.ok) {
+    if (res.status === 429) {
+      throw Object.assign(new Error('daily-limit'), { code: 'daily-limit', used: quota.used, limit: quota.limit })
+    }
+    throw new Error(`http-${res.status}`)
+  }
   const data = await res.json()
   const text = data?.choices?.[0]?.message?.content
   if (typeof text !== 'string' || text.trim() === '') throw new Error('empty')
-  return text.trim()
+  return { text: text.trim(), used: quota.used, limit: quota.limit }
 }
 
-export async function pingLiveAI(signal?: AbortSignal): Promise<boolean> {
-  if (typeof fetch === 'undefined') return false
+export async function pingLiveAI(signal?: AbortSignal): Promise<PingResult> {
+  if (typeof fetch === 'undefined') return { ok: false, used: null, limit: null, limited: false }
   try {
     const res = await fetch(AI_ENDPOINT, {
       method: 'POST',
@@ -248,11 +278,15 @@ export async function pingLiveAI(signal?: AbortSignal): Promise<boolean> {
       body: JSON.stringify({ messages: [{ role: 'user', content: 'قول فقط كلمة: متصل' }] }),
       signal,
     })
-    if (!res.ok) return false
+    const quota = readQuota(res)
+    if (res.status === 429) {
+      return { ok: false, used: quota.used, limit: quota.limit, limited: true }
+    }
+    if (!res.ok) return { ok: false, used: quota.used, limit: quota.limit, limited: false }
     const data = await res.json()
     const text = data?.choices?.[0]?.message?.content
-    return typeof text === 'string' && text.trim() !== ''
+    return { ok: typeof text === 'string' && text.trim() !== '', used: quota.used, limit: quota.limit, limited: false }
   } catch {
-    return false
+    return { ok: false, used: null, limit: null, limited: false }
   }
 }
