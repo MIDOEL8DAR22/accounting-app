@@ -8,7 +8,7 @@ import {
 } from '../lib/progress'
 import { STAGES } from '../data/stages'
 import { useState } from 'react'
-import { IconChartUp, IconTrash, IconFlame, IconTarget, IconShield, IconBook, IconAlert } from '../components/icons'
+import { IconChartUp, IconTrash, IconFlame, IconTarget, IconShield, IconBook, IconAlert, IconBrain, IconLayers, IconNotebook, IconSearch, IconBookMark } from '../components/icons'
 
 export function Progress() {
   const [refresh, setRefresh] = useState(0)
@@ -69,6 +69,28 @@ export function Progress() {
           <div className="text-xs font-bold text-slate-500 dark:text-slate-400">أيام السلسلة</div>
         </Card>
       </div>
+
+      <Card>
+        <h2 className="mb-3 text-sm font-extrabold text-slate-700 dark:text-slate-200">نشاطك على الموقع</h2>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {[
+            { icon: <IconBook size={16} />, n: progress.completedLessons.length, label: 'دروس مكتملة', color: 'text-blue-600 bg-blue-50 dark:bg-blue-500/10' },
+            { icon: <IconBrain size={16} />, n: progress.solverSolved, label: 'عمليات محلولة', color: 'text-purple-600 bg-purple-50 dark:bg-purple-500/10' },
+            { icon: <IconLayers size={16} />, n: `${progress.flashcardsKnown}/${progress.flashcardsReviewed}`, label: 'بطاقات عرفتها/راجعتها', color: 'text-amber-600 bg-amber-50 dark:bg-amber-500/10' },
+            { icon: <IconNotebook size={16} />, n: progress.entriesBuilt, label: 'قيود سجلتها', color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10' },
+            { icon: <IconSearch size={16} />, n: progress.dictionarySearches, label: 'بحث في القاموس', color: 'text-sky-600 bg-sky-50 dark:bg-sky-500/10' },
+            { icon: <IconBookMark size={16} />, n: progress.summaryViews, label: 'مرات تلخيص', color: 'text-rose-600 bg-rose-50 dark:bg-rose-500/10' },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center gap-2 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
+              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.color}`}>{item.icon}</span>
+              <div className="min-w-0">
+                <div className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{item.n}</div>
+                <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{item.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>

@@ -14,6 +14,7 @@ import {
   IconSearch,
   IconList,
   IconBookOpen,
+  IconBookMark,
   IconClock,
   IconFlame,
 } from '../components/icons'
@@ -170,6 +171,9 @@ export function Dashboard() {
             <div className="space-y-2">
               <Link to="/builder">
                 <Button variant="secondary" className="w-full"><IconNotebook size={15} /> منشئ القيد اليومي</Button>
+              </Link>
+              <Link to="/summary">
+                <Button variant="secondary" className="w-full"><IconBookMark size={15} /> تلخيص المحاسبة</Button>
               </Link>
               <Link to="/flashcards">
                 <Button variant="secondary" className="w-full"><IconLayers size={15} /> بطاقات الحفظ السريع</Button>

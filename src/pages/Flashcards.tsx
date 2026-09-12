@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from '../components/ui'
 import { FLASHCARDS } from '../data/flashcards'
+import { recordFlashcard } from '../lib/progress'
 import { IconLayers, IconLightbulb, IconRefresh, IconXCircle, IconCheckCircle, IconBack, IconArrowRight, IconArrowLeft } from '../components/icons'
 
 export function Flashcards() {
@@ -23,6 +24,7 @@ export function Flashcards() {
   }
   const markKnown = (known: boolean) => {
     setKnown((prev) => ({ ...prev, [current]: known }))
+    recordFlashcard(known)
     next()
   }
 

@@ -17,6 +17,7 @@ const Progress = lazy(() => import('./pages/Progress').then(m => ({ default: m.P
 const Reference = lazy(() => import('./pages/Reference').then(m => ({ default: m.Reference })))
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })))
 const Builder = lazy(() => import('./pages/Builder').then(m => ({ default: m.Builder })))
+const Summary = lazy(() => import('./pages/Summary').then(m => ({ default: m.SummaryPage })))
 
 function Loader() {
   return (
@@ -48,6 +49,7 @@ export default function App() {
               <Route path="/flashcards" element={<Flashcards />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="/reference" element={<Reference />} />
+              <Route path="/summary" element={<Summary />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/builder" element={<Builder />} />
               <Route path="*" element={<Dashboard />} />

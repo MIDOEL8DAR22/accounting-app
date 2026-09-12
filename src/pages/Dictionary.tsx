@@ -3,6 +3,7 @@ import { Card, Badge } from '../components/ui'
 import { searchDictionary, SEARCH_HINTS } from '../data/accountDictionary'
 import { TYPE_LABELS } from '../data/accountTypes'
 import type { AccountMapping } from '../types'
+import { recordDictionarySearch } from '../lib/progress'
 import { IconSearch, IconPen, IconAlert, IconInfo } from '../components/icons'
 
 export function Dictionary() {
@@ -58,7 +59,7 @@ export function Dictionary() {
             {results.length} نتيجة
           </div>
           {results.map((m) => (
-            <Card key={m.id} className="cursor-pointer transition hover:border-blue-300" onClick={() => setSelected(selected?.id === m.id ? null : m)}>
+            <Card key={m.id} className="cursor-pointer transition hover:border-blue-300" onClick={() => { if (selected?.id !== m.id) recordDictionarySearch(); setSelected(selected?.id === m.id ? null : m) }}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{m.account}</div>

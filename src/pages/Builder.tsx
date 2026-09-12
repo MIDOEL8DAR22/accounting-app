@@ -3,6 +3,7 @@ import { Card, Button } from '../components/ui'
 import { ACCOUNT_CATALOG } from '../data/accountDictionary'
 import { cn } from '../lib/cn'
 import { formatAmount } from '../lib/engine'
+import { recordEntry } from '../lib/progress'
 import { IconNotebook, IconX, IconCheckCircle, IconAlert, IconPlus } from '../components/icons'
 
 interface Line {
@@ -157,6 +158,9 @@ export function Builder() {
                 )
               })}
             </div>
+            <Button variant="success" className="mt-4" onClick={() => recordEntry()}>
+              <IconCheckCircle size={15} /> سجّل القيد ده
+            </Button>
           </div>
         ) : (
           <div className="text-center">

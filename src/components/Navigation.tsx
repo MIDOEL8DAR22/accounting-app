@@ -15,6 +15,7 @@ import {
   IconList,
   IconChartUp,
   IconSettings,
+  IconBookMark,
   IconSun,
   IconMoon,
   IconMenu,
@@ -32,6 +33,7 @@ const NAV_ITEMS: { to: string; label: string; icon: ReactNode }[] = [
   { to: '/dictionary', label: 'قاموس الحسابات', icon: <IconSearch size={17} /> },
   { to: '/flashcards', label: 'بطاقات الحفظ', icon: <IconLayers size={17} /> },
   { to: '/reference', label: 'المرجع السريع', icon: <IconList size={17} /> },
+  { to: '/summary', label: 'تلخيص المحاسبة', icon: <IconBookMark size={17} /> },
   { to: '/progress', label: 'تقدمك', icon: <IconChartUp size={17} /> },
   { to: '/settings', label: 'الإعدادات', icon: <IconSettings size={17} /> },
 ]

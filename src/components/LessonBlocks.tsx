@@ -1,7 +1,7 @@
 import type { LessonBlock } from '../types'
 import { EntryTable } from './DecisionFlow'
 import { cn } from '../lib/cn'
-import { IconLightbulb, IconAlert, IconCheckCircle, IconRule, IconPen, IconListDot } from './icons'
+import { IconLightbulb, IconAlert, IconCheckCircle, IconRule, IconPen, IconListDot, IconBookMark, IconTarget } from './icons'
 
 export function LessonBlockView({ block }: { block: LessonBlock }) {
   switch (block.type) {
@@ -95,6 +95,44 @@ export function LessonBlockView({ block }: { block: LessonBlock }) {
               <EntryTable debit={block.entry.debit} credit={block.entry.credit} />
             </div>
           )}
+        </div>
+      )
+
+    case 'memory':
+      return (
+        <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4 dark:border-amber-500/40 dark:bg-amber-500/10">
+          <div className="mb-1 flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+            <IconBookMark size={14} /> اتحفظها كده
+          </div>
+          <div className="text-sm font-extrabold text-amber-900 dark:text-amber-100">{block.title}</div>
+          <p className="mt-1 text-sm leading-relaxed text-amber-800 dark:text-amber-200">{block.content}</p>
+        </div>
+      )
+
+    case 'steps':
+      return (
+        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800/60">
+          {block.title && (
+            <div className="mb-3 flex items-center gap-1.5 text-sm font-extrabold text-slate-700 dark:text-slate-200">
+              <IconTarget size={16} className="text-blue-600 dark:text-blue-400" /> {block.title}
+            </div>
+          )}
+          <ol className="space-y-0">
+            {block.steps.map((step, i) => (
+              <li key={i} className="relative flex items-start gap-3 pb-4 last:pb-0">
+                {i < block.steps.length - 1 && (
+                  <span className="absolute top-6 right-[11px] h-[calc(100%-18px)] w-0.5 bg-slate-200 dark:bg-slate-700" />
+                )}
+                <span className="relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-extrabold text-white">
+                  {i + 1}
+                </span>
+                <div className="min-w-0">
+                  <div className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{step.label}</div>
+                  {step.detail && <div className="mt-0.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{step.detail}</div>}
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
       )
   }

@@ -3,6 +3,7 @@ import { Card, Button } from '../components/ui'
 import { DecisionFlow, WhyBox } from '../components/DecisionFlow'
 import { solveTransaction, analyzeTransaction, type PatternMatch } from '../lib/solver'
 import type { StepResult } from '../types'
+import { recordSolver } from '../lib/progress'
 import { IconBrain, IconPen, IconSearch, IconLightbulb, IconQuestion, IconAlert } from '../components/icons'
 
 const EXAMPLE_TRANSACTIONS = [
@@ -31,6 +32,7 @@ export function Solver() {
     if (steps && pattern) {
       setResult({ steps, pattern })
       setNoMatch(false)
+      recordSolver()
     } else {
       setResult(null)
       setNoMatch(true)

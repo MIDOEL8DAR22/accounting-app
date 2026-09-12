@@ -21,6 +21,12 @@ export interface UserProgress {
   lastLessonId: string | null
   currentStage: number
   exerciseHistory: { exerciseId: string; correct: boolean; date: string }[]
+  solverSolved: number
+  flashcardsReviewed: number
+  flashcardsKnown: number
+  entriesBuilt: number
+  dictionarySearches: number
+  summaryViews: number
 }
 
 const defaultProgress: UserProgress = {
@@ -40,6 +46,12 @@ const defaultProgress: UserProgress = {
   lastLessonId: null,
   currentStage: 1,
   exerciseHistory: [],
+  solverSolved: 0,
+  flashcardsReviewed: 0,
+  flashcardsKnown: 0,
+  entriesBuilt: 0,
+  dictionarySearches: 0,
+  summaryViews: 0,
 }
 
 export function getProgress(): UserProgress {
@@ -135,6 +147,50 @@ export function touchLesson(lessonId: string): void {
   saveProgress(progress)
 }
 
+export function recordSolver(): void {
+  const progress = getProgress()
+  progress.solverSolved++
+  progress.totalPoints += 5
+  progress.lastActivity = new Date().toISOString()
+  saveProgress(progress)
+}
+
+export function recordFlashcard(known: boolean): void {
+  const progress = getProgress()
+  progress.flashcardsReviewed++
+  if (known) {
+    progress.flashcardsKnown++
+    progress.totalPoints += 3
+  } else {
+    progress.totalPoints += 1
+  }
+  progress.lastActivity = new Date().toISOString()
+  saveProgress(progress)
+}
+
+export function recordEntry(): void {
+  const progress = getProgress()
+  progress.entriesBuilt++
+  progress.totalPoints += 10
+  progress.lastActivity = new Date().toISOString()
+  saveProgress(progress)
+}
+
+export function recordDictionarySearch(): void {
+  const progress = getProgress()
+  progress.dictionarySearches++
+  progress.totalPoints += 1
+  progress.lastActivity = new Date().toISOString()
+  saveProgress(progress)
+}
+
+export function recordSummaryView(): void {
+  const progress = getProgress()
+  progress.summaryViews++
+  progress.lastActivity = new Date().toISOString()
+  saveProgress(progress)
+}
+
 export function resumeTarget(): { lessonId: string; lessonTitle: string; stageId: number } | null {
   const progress = getProgress()
   if (!progress.lastLessonId) return null
@@ -162,16 +218,27 @@ export function getCurrentStage(): number {
 }
 
 export function getProgressPercentage(): number {
-    const progress = getProgress()
-    const totalStages = 6
-    const stagesFraction = progress.completedStages.length / totalStages
-    const exercisesFraction = progress.exercisesSolved > 0 ? 0.1 : 0
-    const total = Math.min((stagesFraction * 0.9 + exercisesFraction) * 100, 100)
-    return Math.round(total)
-  }
+  const progress = getProgress()
+  const stagesFraction = progress.completedStages.length / 6
+  const lessonsFraction = progress.completedLessons.length / LESSONS.length
+  const exercisesFraction = Math.min(1, progress.exercisesSolved / 60)
+  const activities =
+    progress.quizScores.length +
+    progress.solverSolved +
+    progress.flashcardsReviewed +
+    progress.entriesBuilt +
+    progress.dictionarySearches +
+    progress.summaryViews
+  const activityFraction = Math.min(1, activities / 50)
+  const total =
+    (stagesFraction * 0.4 + lessonsFraction * 0.3 + exercisesFraction * 0.15 + activityFraction * 0.15) *
+    100
+  return Math.round(Math.min(100, total))
+}
 
 export function resetProgress(): void {
   localStorage.removeItem(STORAGE_KEY)
+  localStorage.removeItem(BACKUP_KEY)
 }
 
 export function getWeakTopics(): string[] {
@@ -207,5 +274,11 @@ export function getStats() {
     weakTopics: getWeakTopics(),
     lastActivity: progress.lastActivity,
     lastLessonId: progress.lastLessonId,
+    solverSolved: progress.solverSolved,
+    flashcardsReviewed: progress.flashcardsReviewed,
+    flashcardsKnown: progress.flashcardsKnown,
+    entriesBuilt: progress.entriesBuilt,
+    dictionarySearches: progress.dictionarySearches,
+    summaryViews: progress.summaryViews,
   }
 }

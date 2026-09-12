@@ -67,6 +67,8 @@ export type LessonBlock =
   | { type: 'example'; title: string; content: string[]; entry?: { debit?: string; credit?: string } }
   | { type: 'rule'; title: string; content: string }
   | { type: 'list'; title?: string; items: string[] }
+  | { type: 'memory'; title: string; content: string }
+  | { type: 'steps'; title?: string; steps: { label: string; detail?: string }[] }
 
 export interface Flashcard {
   id: string
