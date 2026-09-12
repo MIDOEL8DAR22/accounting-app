@@ -10,6 +10,7 @@ export interface EntryReply {
 export interface BotReply {
   text: string
   entry?: EntryReply
+  known?: boolean
 }
 
 const NAME = 'المحاسب عادل'
@@ -153,7 +154,7 @@ export function askAccountant(input: string): BotReply {
   }
 
   const faq = FAQ.find((f) => f.keys.some((k) => q.includes(k)))
-  if (faq) return { text: faq.text }
+  if (faq) return { text: faq.text, known: true }
 
   return { text: FALLBACK }
 }
@@ -236,4 +237,22 @@ export async function askLiveAI(messages: ChatMsg[], signal?: AbortSignal): Prom
   const text = data?.choices?.[0]?.message?.content
   if (typeof text !== 'string' || text.trim() === '') throw new Error('empty')
   return text.trim()
+}
+
+export async function pingLiveAI(signal?: AbortSignal): Promise<boolean> {
+  if (typeof fetch === 'undefined') return false
+  try {
+    const res = await fetch(AI_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: 'قول فقط كلمة: متصل' }] }),
+      signal,
+    })
+    if (!res.ok) return false
+    const data = await res.json()
+    const text = data?.choices?.[0]?.message?.content
+    return typeof text === 'string' && text.trim() !== ''
+  } catch {
+    return false
+  }
 }

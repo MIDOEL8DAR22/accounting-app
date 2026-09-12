@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Card, Button, Badge } from '../components/ui'
-import { askAccountant, askLiveAI, INTERVIEW, gradeInterviewAnswer, type EntryReply, type ChatMsg } from '../lib/accountant'
+import { askAccountant, askLiveAI, pingLiveAI, INTERVIEW, gradeInterviewAnswer, type EntryReply } from '../lib/accountant'
 import { getProgress, setAiAssistant } from '../lib/progress'
 import { cn } from '../lib/cn'
 import {
@@ -46,6 +46,7 @@ export function Accountant() {
   const [interview, setInterview] = useState<InterviewState | null>(null)
   const [aiOn, setAiOn] = useState(() => getProgress().aiAssistant !== false)
   const [aiLoading, setAiLoading] = useState(false)
+  const [aiOnline, setAiOnline] = useState<boolean | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -53,6 +54,27 @@ export function Accountant() {
   }, [messages])
 
   const push = (m: Msg) => setMessages((prev) => [...prev, m])
+
+  const handleToggle = async () => {
+    const next = !aiOn
+    setAiOn(next)
+    setAiAssistant(next)
+    if (!next) {
+      setAiOnline(null)
+      push({ id: Date.now(), role: 'bot', text: 'تم إيقاف الذكاء الحي — ردود القواعد المحلية بس دلوقتي.' })
+      return
+    }
+    push({ id: Date.now(), role: 'bot', text: 'جاري فحص الاتصال بالذكاء الحي المجاني...' })
+    const ok = await pingLiveAI()
+    setAiOnline(ok)
+    push({
+      id: Date.now(),
+      role: 'bot',
+      text: ok
+        ? 'تم التفعيل — الاتصال بالذكاء الحي المجاني شغّال. ابعت أي سؤال وهييجاوبك على طول.'
+        : 'تم التفعيل بس الاتصال بالذكاء الحي مش متاح دلوقتي — هيرد عليك الردود الجاهزة مع رسالة توضح السبب لو فشل الاتصال.',
+    })
+  }
 
   const send = async (raw: string) => {
     const text = raw.trim()
@@ -104,30 +126,35 @@ export function Accountant() {
     }
 
     const reply = askAccountant(text)
-    if (reply.entry || !aiOn) {
+    if (reply.entry || reply.known || !aiOn) {
       push({ id: Date.now(), role: 'bot', text: reply.text, entry: reply.entry })
       return
     }
 
-    // no local answer → ask the live free AI
+    // no local answer → ask the live free AI (guaranteed reply or error, never silent)
     setAiLoading(true)
-    const controller = new AbortController()
-    const timer = window.setTimeout(() => controller.abort(), 60000)
-    const history: ChatMsg[] = messages
-      .filter((m) => m.text && m.id !== 0)
-      .slice(-10)
-      .map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }))
+    let timeoutTimer: number | undefined
     try {
-      const aiText = await askLiveAI([...history, { role: 'user', content: text }], controller.signal)
+      const aiPromise = askLiveAI([
+        ...messages
+          .filter((m) => m.text && m.id !== 0)
+          .slice(-10)
+          .map((m) => ({ role: m.role === 'user' ? ('user' as const) : ('assistant' as const), content: m.text })),
+        { role: 'user', content: text },
+      ])
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutTimer = window.setTimeout(() => reject(new Error('timeout')), 45000)
+      })
+      const aiText = await Promise.race([aiPromise, timeoutPromise])
       push({ id: Date.now(), role: 'bot', text: aiText })
     } catch {
       push({
         id: Date.now(),
         role: 'bot',
-        text: 'مع الأسف خدمة الذكاء الحي مش متاحة دلوقتي (نيّت مش وصل أو حد إستخدام). هنا ردّ من القواعد المحلية:\n\n' + reply.text,
+        text: 'الذكاء الحي مش قادر يوصل دلوقتي (مشكلة اتصال أو الخدمة مشغولة).\n\nرد القواعد الجاهزة:\n\n' + reply.text,
       })
     } finally {
-      window.clearTimeout(timer)
+      if (timeoutTimer !== undefined) window.clearTimeout(timeoutTimer)
       setAiLoading(false)
     }
   }
@@ -145,11 +172,7 @@ export function Accountant() {
           </div>
           <div className="mr-auto flex items-center gap-2">
             <button
-              onClick={() => {
-                const next = !aiOn
-                setAiOn(next)
-                setAiAssistant(next)
-              }}
+              onClick={() => { void handleToggle() }}
               title={aiOn ? 'الذكاء الحي شغال — إجابات برة القواعد بتيجي من خدمة مجانية خارجية' : 'الذكاء الحي مطفى — ردود من القواعد المحلية بس'}
               className={cn(
                 'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors',
@@ -159,7 +182,7 @@ export function Accountant() {
               )}
             >
               <IconSpark size={13} />
-              الذكاء الحي: {aiOn ? 'شغال' : 'مطفى'}
+              الذكاء الحي: {aiOn ? (aiOnline === null ? 'جدّي' : aiOnline ? 'متصّل' : 'مش متاح') : 'مطفى'}
             </button>
             {interview?.active && (
               <Badge color="green">مقابلة جارية</Badge>
@@ -235,8 +258,8 @@ export function Accountant() {
               placeholder={interview?.active ? 'اكتب إجابتك على سؤال المقابلة...' : 'اكتب عملية شغل حقيقي أو اسأل سؤال...'}
               className="flex-1 resize-none rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 dark:bg-slate-800 dark:border-slate-700"
             />
-            <Button variant="primary" onClick={() => send(input)} className="h-10 px-4 shrink-0">
-              <IconArrowLeft size={18} />
+            <Button variant="primary" onClick={() => send(input)} disabled={aiLoading} className="h-10 px-4 shrink-0">
+              {aiLoading ? <IconSpark size={18} className="animate-spin" /> : <IconArrowLeft size={18} />}
             </Button>
           </div>
           <div className="mt-2 flex items-center justify-between gap-2">
