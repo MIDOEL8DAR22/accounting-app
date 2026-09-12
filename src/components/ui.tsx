@@ -26,7 +26,7 @@ export function Button({
   type = 'button',
 }: {
   children: ReactNode
-  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'ghost' | 'warning'
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'ghost' | 'warning' | 'hero' | 'frost'
   className?: string
   disabled?: boolean
   onClick?: () => void
@@ -43,6 +43,8 @@ export function Button({
     warning: 'bg-amber-500 text-white hover:bg-amber-600',
     ghost:
       'bg-transparent text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700',
+    hero: 'bg-white text-blue-700 hover:bg-blue-50 shadow-sm shadow-blue-900/10',
+    frost: 'border border-white/40 bg-white/15 text-white hover:bg-white/25',
   }
   return (
     <button

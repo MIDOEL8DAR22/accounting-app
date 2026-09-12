@@ -45,12 +45,12 @@ export function Dashboard() {
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link to={resumeLink}>
-              <Button className="bg-white text-blue-700 hover:bg-blue-50 shadow-sm">
+              <Button variant="hero">
                 <IconPlay size={16} /> {resumeText}
               </Button>
             </Link>
             <Link to="/solver">
-              <Button className="border border-white/35 bg-white/15 text-white hover:bg-white/25 dark:bg-white/10 dark:hover:bg-white/20">
+              <Button variant="frost">
                 <IconBrain size={16} /> حل أي سؤال محاسبي
               </Button>
             </Link>
