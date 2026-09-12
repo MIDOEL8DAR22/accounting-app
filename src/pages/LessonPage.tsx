@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Button, ProgressBar } from '../components/ui'
+import { Button } from '../components/ui'
 import { LessonBlockView } from '../components/LessonBlocks'
 import { LESSONS, STAGES } from '../data/stages'
 import { getProgress, completeLesson, touchLesson } from '../lib/progress'
@@ -53,36 +53,47 @@ export function LessonPage() {
         <IconArrowLeft size={15} /> العودة: المرحلة {lesson.stageId} — {stage?.title}
       </Link>
 
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 sm:text-2xl">{lesson.title}</h1>
-          {lesson.subtitle && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{lesson.subtitle}</p>}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-blue-700 via-blue-600 to-indigo-700 p-5 text-white shadow-lg shadow-blue-700/20 sm:p-6">
+        <div className="absolute -left-10 -top-10 h-36 w-36 rounded-full bg-white/10 blur-2xl" />
+        <div className="relative">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/15 px-2.5 py-1 text-xs font-bold">
+              <IconTarget size={13} /> المرحلة {lesson.stageId} — {stage?.title}
+            </span>
+            {done && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-1 text-xs font-bold text-emerald-200">
+                <IconCheckCircle size={13} /> مكتملة
+              </span>
+            )}
+          </div>
+          <h1 className="mt-3 text-2xl font-extrabold sm:text-3xl">{lesson.title}</h1>
+          {lesson.subtitle && <p className="mt-1 text-sm text-blue-100 sm:text-base">{lesson.subtitle}</p>}
+          {expanded !== 'all' && (
+            <div className="mt-4">
+              <div className="mb-1 flex items-center justify-between text-[11px] font-bold text-blue-100">
+                <span>تقدمك في الدرس</span>
+                <span>{revealedCount} / {lesson.blocks.length}</span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/25">
+                <div className="h-full rounded-full bg-white transition-all duration-500" style={{ width: `${(revealedCount / lesson.blocks.length) * 100}%` }} />
+              </div>
+            </div>
+          )}
+          <div className="mt-4 flex items-center gap-3 text-xs font-bold text-blue-100">
+            <span>الكتلة {currentIndex + 1} من {stageLessons.length}</span>
+            <span>•</span>
+            <span>{lesson.blocks.length} أجزاء</span>
+          </div>
         </div>
-        {expanded !== 'all' && (
-          <button
-            onClick={() => setExpanded('all')}
-            className="shrink-0 inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-          >
-            <IconEye size={14} /> عرض كل الدرس
-          </button>
-        )}
       </div>
 
-      <div>
-        <div className="mb-1 flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
-          <span>محتوى الدرس</span>
-          <span>{revealedCount} / {lesson.blocks.length}</span>
-        </div>
-        <ProgressBar value={(revealedCount / lesson.blocks.length) * 100} />
-      </div>
-
-      <div className="space-y-4">
+      <div className="space-y-5">
         {lesson.blocks.map((block, i) => (
           <div key={i} className="space-y-3">
             {isVisible(i) && <LessonBlockView block={block} />}
             {isNext(i) && (
-              <Button onClick={() => setExpanded(i)} variant="ghost" className="w-full border border-dashed border-slate-300 dark:border-slate-600">
-                <IconDown size={16} /> اضغط كمان عشان تكمل — {TYPE_LABEL[block.type] ?? 'جزء جديد'}
+              <Button onClick={() => setExpanded(i)} variant="secondary" className="w-full py-3">
+                <IconDown size={16} /> تكمّل الدرس — {TYPE_LABEL[block.type] ?? 'جزء جديد'}
               </Button>
             )}
           </div>
@@ -91,8 +102,8 @@ export function LessonPage() {
 
       {expanded !== 'all' && (
         <div className="text-center">
-          <Button onClick={() => setExpanded('all')} variant="secondary" className="w-full sm:w-auto">
-            <IconEye size={16} /> استعرض باقي الدرس
+          <Button onClick={() => setExpanded('all')} variant="ghost" className="w-full sm:w-auto">
+            <IconEye size={16} /> استعرض باقي الدرس للمراجعة
           </Button>
         </div>
       )}

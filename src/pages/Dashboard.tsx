@@ -50,7 +50,7 @@ export function Dashboard() {
               </Button>
             </Link>
             <Link to="/solver">
-              <Button variant="secondary" className="bg-blue-900/40 text-white hover:bg-blue-900/60 dark:bg-slate-800/60">
+              <Button className="border border-white/35 bg-white/15 text-white hover:bg-white/25 dark:bg-white/10 dark:hover:bg-white/20">
                 <IconBrain size={16} /> حل أي سؤال محاسبي
               </Button>
             </Link>
