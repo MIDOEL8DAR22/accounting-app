@@ -172,7 +172,6 @@ export function Practical() {
     setSession((s) => ({ ...s, done: true }))
   }
 
-  const ledger = computeLedger(scenario)
   const journalDone = scenario.txs.every((tx) => gradeTx(tx, session.rows[tx.id] ?? emptyRow()).correct)
   const tbDone = stepComplete({ ...session })
   const incomeDone = (() => {

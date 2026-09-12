@@ -162,7 +162,7 @@ export function computeSummary(s: Scenario): PracticeSummary {
   const totalCosts = costItems.reduce((s2, r) => s2 + r.amount, 0)
   const totalExpenses = expenseItems.reduce((s2, r) => s2 + r.amount, 0)
   const netProfit = totalRevenues - totalCosts - totalExpenses
-  const drawings = drawingItems.reduce((s2, r) => s2 + r.amount, 0)
+  const drawings = drawingItems.reduce((s2, r) => s2 + sideAmount(r), 0)
   const equityBase = equityItems.reduce((s2, r) => s2 + r.amount, 0)
   const totalAssets = assetItems.reduce((s2, r) => s2 + r.amount, 0)
   const totalLiabilities = liabilityItems.reduce((s2, r) => s2 + r.amount, 0)
