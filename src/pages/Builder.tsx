@@ -3,6 +3,7 @@ import { Card, Button } from '../components/ui'
 import { ACCOUNT_CATALOG } from '../data/accountDictionary'
 import { cn } from '../lib/cn'
 import { formatAmount } from '../lib/engine'
+import { IconNotebook, IconX, IconCheckCircle, IconAlert, IconPlus } from '../components/icons'
 
 interface Line {
   accountId: string
@@ -35,7 +36,10 @@ export function Builder() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 sm:text-2xl">📒 منشئ القيد اليومي</h1>
+        <h1 className="flex items-center gap-2 text-xl font-extrabold text-slate-800 dark:text-slate-100 sm:text-2xl">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"><IconNotebook size={18} /></span>
+          منشئ القيد اليومي
+        </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">اختار الحسابات والمبالغ — وشوف القيد بيتكتب صح</p>
       </div>
 
@@ -66,12 +70,12 @@ export function Builder() {
                   className="num w-32 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                 />
                 {debits.length > 1 && (
-                  <button onClick={() => removeDebitLine(i)} className="text-rose-400 hover:text-rose-600">✕</button>
+                  <button onClick={() => removeDebitLine(i)} className="rounded-md p-1 text-rose-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10" aria-label="حذف السطر"><IconX size={15} /></button>
                 )}
               </div>
             ))}
             <Button variant="ghost" onClick={addDebitLine} className="w-full border border-dashed border-blue-300 text-blue-600">
-              + سطر مدين
+              <IconPlus size={14} /> سطر مدين
             </Button>
           </div>
           <div className="mt-3 border-t border-slate-200 pt-2 dark:border-slate-700">
@@ -107,12 +111,12 @@ export function Builder() {
                   className="num w-32 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                 />
                 {credits.length > 1 && (
-                  <button onClick={() => removeCreditLine(i)} className="text-rose-400 hover:text-rose-600">✕</button>
+                  <button onClick={() => removeCreditLine(i)} className="rounded-md p-1 text-rose-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10" aria-label="حذف السطر"><IconX size={15} /></button>
                 )}
               </div>
             ))}
             <Button variant="ghost" onClick={addCreditLine} className="w-full border border-dashed border-emerald-300 text-emerald-600">
-              + سطر دائن
+              <IconPlus size={14} /> سطر دائن
             </Button>
           </div>
           <div className="mt-3 border-t border-slate-200 pt-2 dark:border-slate-700">
@@ -131,7 +135,7 @@ export function Builder() {
           <div className="text-center text-sm text-slate-500 dark:text-slate-400">اختار الحسابات والمبلغ</div>
         ) : isBalanced ? (
           <div className="text-center">
-            <div className="text-2xl mb-2">✅</div>
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"><IconCheckCircle size={24} /></div>
             <div className="text-sm font-extrabold text-emerald-700 dark:text-emerald-300">
               القيد متوازن — {formatAmount(totalDebit)} جنيه
             </div>
@@ -156,7 +160,7 @@ export function Builder() {
           </div>
         ) : (
           <div className="text-center">
-            <div className="text-2xl mb-2">⚠️</div>
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400"><IconAlert size={24} /></div>
             <div className="text-sm font-bold text-rose-700 dark:text-rose-300">
               القيد مش متوازن! المدين ({formatAmount(totalDebit)}) لا يساوي الدائن ({formatAmount(totalCredit)})
             </div>

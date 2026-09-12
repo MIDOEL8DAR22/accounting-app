@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from '../components/ui'
 import { FLASHCARDS } from '../data/flashcards'
+import { IconLayers, IconLightbulb, IconRefresh, IconXCircle, IconCheckCircle, IconBack, IconArrowRight, IconArrowLeft } from '../components/icons'
 
 export function Flashcards() {
   const [current, setCurrent] = useState(0)
@@ -28,7 +29,10 @@ export function Flashcards() {
   return (
     <div className="max-w-lg mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-extrabold text-slate-800 dark:text-slate-100">🗃️ بطاقات الحفظ</h1>
+        <h1 className="flex items-center gap-2 text-lg font-extrabold text-slate-800 dark:text-slate-100">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"><IconLayers size={18} /></span>
+          بطاقات الحفظ
+        </h1>
         <span className="text-sm font-bold text-slate-500">
           {knownCount}/{FLASHCARDS.length} عرفتها
         </span>
@@ -54,7 +58,7 @@ export function Flashcards() {
               <div className="text-sm font-semibold text-emerald-200 mb-4">الإجابة</div>
               <div className="text-lg font-extrabold leading-relaxed">{card.back}</div>
               {card.hint && (
-                <div className="mt-4 rounded-xl bg-white/20 p-2 text-xs text-emerald-100">💡 {card.hint}</div>
+                <div className="mt-4 flex items-center justify-center gap-1.5 rounded-xl bg-white/20 p-2 text-xs text-emerald-100"><IconLightbulb size={13} /> {card.hint}</div>
               )}
               <div className="mt-4 text-xs text-emerald-200">اضغط عشان ترجّع</div>
             </div>
@@ -63,18 +67,25 @@ export function Flashcards() {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="ghost" onClick={prev} className="flex-1">← السابق</Button>
+        <Button variant="ghost" onClick={prev} className="flex-1"><IconBack size={15} /> السابق</Button>
         {!flipped ? (
-          <Button onClick={() => setFlipped(true)} className="flex-1">🔄 اقلب البطاقة</Button>
+          <Button onClick={() => setFlipped(true)} className="flex-1"><IconRefresh size={15} /> اقلب البطاقة</Button>
         ) : (
           <>
-            <Button variant="danger" onClick={() => markKnown(false)} className="flex-1">❌ مش عارف</Button>
-            <Button variant="success" onClick={() => markKnown(true)} className="flex-1">✅ عرفت</Button>
+            <Button variant="danger" onClick={() => markKnown(false)} className="flex-1"><IconXCircle size={15} /> مش عارف</Button>
+            <Button variant="success" onClick={() => markKnown(true)} className="flex-1"><IconCheckCircle size={15} /> عرفت</Button>
           </>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-1.5 justify-center">
+      <div className="flex items-center justify-center gap-2">
+        <button
+          onClick={prev}
+          className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+          aria-label="السابق"
+        >
+          <IconArrowRight size={18} />
+        </button>
         {FLASHCARDS.map((_, i) => (
           <button
             key={i}
@@ -92,6 +103,13 @@ export function Flashcards() {
             {i + 1}
           </button>
         ))}
+        <button
+          onClick={next}
+          className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+          aria-label="التالي"
+        >
+          <IconArrowLeft size={18} />
+        </button>
       </div>
     </div>
   )

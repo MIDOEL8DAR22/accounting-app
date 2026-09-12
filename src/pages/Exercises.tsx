@@ -5,6 +5,7 @@ import { recordExercise } from '../lib/progress'
 import type { Exercise } from '../types'
 import { cn } from '../lib/cn'
 import { generateQuestions, type GeneratorConfig } from '../lib/generator'
+import { IconPen, IconRocket, IconRefresh, IconCheck, IconXCircle, IconArrowRight, IconArrowLeft, IconCheckCircle } from '../components/icons'
 
 type AnswerState = { answered: boolean; correct: boolean | null }
 
@@ -18,7 +19,7 @@ const LEVEL_LABELS: Record<string, string> = {
   G: 'اختبار مختلط',
 }
 
-const DIFFICULTY_LABELS = ['⭐ مبتدئ', '⭐⭐ سهل', '⭐⭐⭐ متوسط', '⭐⭐⭐⭐ متقدم', '⭐⭐⭐⭐⭐ تحدّي']
+const DIFFICULTY_LABELS = ['مبتدئ', 'سهل', 'متوسط', 'متقدم', 'تحدّي']
 
 export function Exercises() {
   const [config, setConfig] = useState<GeneratorConfig>({ topic: 'all', difficulty: 0, count: 10, level: 'mixed' })
@@ -108,7 +109,10 @@ export function Exercises() {
   if (pool.length === 0 || !current) {
     return (
       <div className="space-y-6">
-        <h1 className="text-xl font-extrabold text-slate-800 dark:text-slate-100">✏️ تمارين تفاعلية</h1>
+        <h1 className="flex items-center gap-2 text-xl font-extrabold text-slate-800 dark:text-slate-100">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"><IconPen size={18} /></span>
+          تمارين تفاعلية
+        </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">اختار إعدادات التمارين واضغط "ابدأ"</p>
 
         <Card>
@@ -153,7 +157,7 @@ export function Exercises() {
               </select>
             </div>
           </div>
-          <Button onClick={handleStart} className="mt-4">🚀 ابدأ التمرين ({filteredPool.length} سؤال)</Button>
+          <Button onClick={handleStart} className="mt-4"><IconRocket size={15} /> ابدأ التمرين ({filteredPool.length} سؤال)</Button>
         </Card>
       </div>
     )
@@ -164,8 +168,11 @@ export function Exercises() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-extrabold text-slate-800 dark:text-slate-100">✏️ التمارين</h1>
-        <Button variant="ghost" onClick={handleStart}>🔄 تمرين جديد</Button>
+        <h1 className="flex items-center gap-2 text-xl font-extrabold text-slate-800 dark:text-slate-100">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"><IconPen size={18} /></span>
+          التمارين
+        </h1>
+        <Button variant="ghost" onClick={handleStart}><IconRefresh size={14} /> تمرين جديد</Button>
       </div>
 
       <div className="flex items-center gap-3">
@@ -213,9 +220,11 @@ export function Exercises() {
                           : 'border-slate-200 bg-white hover:border-blue-300 dark:border-slate-700 dark:bg-slate-800'
                   )}
                 >
-                  {answered && isCorrectOption && '✅ '}
-                  {answered && isSelected && !isCorrectOption && '❌ '}
-                  {opt}
+                  <span className="inline-flex items-center gap-1.5">
+                    {answered && isCorrectOption && <IconCheck size={15} className="text-emerald-500" />}
+                    {answered && isSelected && !isCorrectOption && <IconXCircle size={15} className="text-rose-500" />}
+                    {opt}
+                  </span>
                 </button>
               )
             })}
@@ -246,8 +255,8 @@ export function Exercises() {
               ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10'
               : 'border-rose-200 bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10'
           )}>
-            <div className="mb-1 font-extrabold">
-              {currentAnswer?.correct ? '✅ ممتاز! صح' : '❌ غلط — ممكن تفهم الغلطة فين؟'}
+            <div className="mb-1 flex items-center gap-1.5 font-extrabold">
+              {currentAnswer?.correct ? (<><IconCheckCircle size={16} className="text-emerald-500" /> ممتاز! صح</>) : (<><IconXCircle size={16} className="text-rose-500" /> غلط — ممكن تفهم الغلطة فين؟</>)}
             </div>
             <div className="text-slate-700 dark:text-slate-200">{current.explanation}</div>
           </div>
@@ -255,9 +264,9 @@ export function Exercises() {
       </Card>
 
       <div className="flex items-center justify-between">
-        <Button variant="secondary" onClick={goPrev} disabled={currentIndex === 0}>السابق ←</Button>
+        <Button variant="secondary" onClick={goPrev} disabled={currentIndex === 0}><IconArrowRight size={15} /> السابق</Button>
         <span className="text-xs font-bold text-slate-500">صحيح: {correctCount} / {totalAnswered}</span>
-        <Button onClick={goNext} disabled={currentIndex >= pool.length - 1}>التالي →</Button>
+        <Button onClick={goNext} disabled={currentIndex >= pool.length - 1}><IconArrowLeft size={15} /> التالي</Button>
       </div>
     </div>
   )

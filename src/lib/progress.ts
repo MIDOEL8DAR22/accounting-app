@@ -1,6 +1,11 @@
+import { LESSONS } from '../data/stages'
+
 const STORAGE_KEY = 'accounting-app-progress'
+const BACKUP_KEY = 'accounting-app-progress-bak'
+const VERSION = 1
 
 export interface UserProgress {
+  version?: number
   completedStages: number[]
   completedLessons: string[]
   exercisesSolved: number
@@ -19,6 +24,7 @@ export interface UserProgress {
 }
 
 const defaultProgress: UserProgress = {
+  version: VERSION,
   completedStages: [],
   completedLessons: [],
   exercisesSolved: 0,
@@ -39,15 +45,30 @@ const defaultProgress: UserProgress = {
 export function getProgress(): UserProgress {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { ...defaultProgress }
-    return { ...defaultProgress, ...JSON.parse(raw) }
+    if (!raw) {
+      const backup = localStorage.getItem(BACKUP_KEY)
+      return backup ? { ...defaultProgress, ...JSON.parse(backup) } : { ...defaultProgress }
+    }
+    const parsed = { ...defaultProgress, ...JSON.parse(raw) }
+    if (parsed.version !== VERSION) {
+      // still usable, just prop the version forward
+      parsed.version = VERSION
+    }
+    return parsed
   } catch {
     return { ...defaultProgress }
   }
 }
 
 export function saveProgress(p: UserProgress): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(p))
+  p.version = VERSION
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(p))
+    // keep a backup copy for resilience
+    localStorage.setItem(BACKUP_KEY, JSON.stringify(p))
+  } catch {
+    // storage full or unavailable — still functional in-memory
+  }
 }
 
 export function recordExercise(exerciseId: string, correct: boolean, topic: string): void {
@@ -105,6 +126,21 @@ export function completeLesson(lessonId: string): void {
   progress.lastActivity = new Date().toISOString()
 
   saveProgress(progress)
+}
+
+export function touchLesson(lessonId: string): void {
+  const progress = getProgress()
+  progress.lastLessonId = lessonId
+  progress.lastActivity = new Date().toISOString()
+  saveProgress(progress)
+}
+
+export function resumeTarget(): { lessonId: string; lessonTitle: string; stageId: number } | null {
+  const progress = getProgress()
+  if (!progress.lastLessonId) return null
+  const lesson = LESSONS.find((l) => l.id === progress.lastLessonId)
+  if (!lesson) return null
+  return { lessonId: lesson.id, lessonTitle: lesson.title, stageId: lesson.stageId }
 }
 
 export function completeStage(stageId: number): void {

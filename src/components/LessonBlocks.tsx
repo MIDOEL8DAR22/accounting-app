@@ -1,6 +1,7 @@
 import type { LessonBlock } from '../types'
 import { EntryTable } from './DecisionFlow'
 import { cn } from '../lib/cn'
+import { IconLightbulb, IconAlert, IconCheckCircle, IconRule, IconPen, IconListDot } from './icons'
 
 export function LessonBlockView({ block }: { block: LessonBlock }) {
   switch (block.type) {
@@ -13,11 +14,15 @@ export function LessonBlockView({ block }: { block: LessonBlock }) {
         warn: 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200',
         success: 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200',
       }
-      const icons = { info: '💡', warn: '⚠️', success: '✅' }
+      const icons = {
+        info: <IconLightbulb size={16} className="mt-0.5 shrink-0" />,
+        warn: <IconAlert size={16} className="mt-0.5 shrink-0" />,
+        success: <IconCheckCircle size={16} className="mt-0.5 shrink-0" />,
+      }
       return (
-        <div className={cn('rounded-xl border p-3 text-sm font-semibold', tones[block.tone ?? 'info'])}>
-          <span className="ml-1">{icons[block.tone ?? 'info']}</span>
-          {block.content}
+        <div className={cn('flex items-start gap-2 rounded-xl border p-3 text-sm font-semibold', tones[block.tone ?? 'info'])}>
+          <span className="mt-0.5">{icons[block.tone ?? 'info']}</span>
+          <span>{block.content}</span>
         </div>
       )
     }
@@ -51,7 +56,9 @@ export function LessonBlockView({ block }: { block: LessonBlock }) {
     case 'rule':
       return (
         <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4 dark:border-blue-500/40 dark:bg-blue-500/10">
-          <div className="mb-1 text-xs font-bold text-blue-500 dark:text-blue-300">📐 القاعدة اللي مش هتنساها</div>
+          <div className="mb-1 flex items-center gap-1 text-xs font-bold text-blue-500 dark:text-blue-300">
+            <IconRule size={14} /> القاعدة اللي مش هتنساها
+          </div>
           <div className="text-sm font-extrabold text-blue-900 dark:text-blue-100">{block.title}</div>
           <p className="mt-1 text-sm text-blue-800 dark:text-blue-200">{block.content}</p>
         </div>
@@ -64,7 +71,7 @@ export function LessonBlockView({ block }: { block: LessonBlock }) {
           <ul className="space-y-1.5">
             {block.items.map((item, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-200">
-                <span className="mt-0.5 text-blue-500">▸</span>
+                <IconListDot size={15} className="mt-0.5 shrink-0 text-blue-500" />
                 <span>{item}</span>
               </li>
             ))}
@@ -75,7 +82,9 @@ export function LessonBlockView({ block }: { block: LessonBlock }) {
     case 'example':
       return (
         <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800/60">
-          <div className="mb-2 text-sm font-extrabold text-blue-700 dark:text-blue-400">📝 {block.title}</div>
+          <div className="mb-2 flex items-center gap-1.5 text-sm font-extrabold text-blue-700 dark:text-blue-400">
+            <IconPen size={15} /> {block.title}
+          </div>
           <div className="space-y-1">
             {block.content.map((c, i) => (
               <p key={i} className="text-sm text-slate-700 dark:text-slate-200">{c}</p>

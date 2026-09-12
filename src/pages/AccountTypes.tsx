@@ -1,8 +1,18 @@
 import { useState } from 'react'
+import type { FC } from 'react'
 import { Card, Badge } from '../components/ui'
 import { ACCOUNT_TYPES, TYPE_BG } from '../data/accountTypes'
 import type { AccountType } from '../types'
 import { cn } from '../lib/cn'
+import { IconWallet, IconCoins, IconFileText, IconLandmark, IconChartUp, IconChartDown, IconRule } from '../components/icons'
+
+const TYPE_ICONS: Record<AccountType, FC<{ size?: number; className?: string }>> = {
+  asset: IconWallet,
+  expense: IconCoins,
+  liability: IconFileText,
+  equity: IconLandmark,
+  revenue: IconChartUp,
+}
 
 export function AccountTypes() {
   const [selected, setSelected] = useState<AccountType | null>(null)
@@ -18,25 +28,30 @@ export function AccountTypes() {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        {ACCOUNT_TYPES.map((t) => (
-          <button
-            key={t.type}
-            onClick={() => setSelected(selected === t.type ? null : t.type)}
-            className={cn(
-              'rounded-xl border-2 px-4 py-3 text-center transition',
-              selected === t.type
-                ? cn(TYPE_BG[t.type], 'ring-2 ring-blue-400 shadow-md')
-                : 'border-slate-200 bg-white hover:border-blue-300 dark:border-slate-700 dark:bg-slate-800/60'
-            )}
-          >
-            <div className="text-2xl">{t.type === 'asset' ? '💰' : t.type === 'expense' ? '💸' : t.type === 'liability' ? '📋' : t.type === 'equity' ? '🏛️' : '📈'}</div>
-            <div className="mt-1 text-sm font-extrabold text-slate-800 dark:text-slate-100">{t.nameAr}</div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 lang-en">{t.nameEn}</div>
-            <Badge color={t.type === 'asset' ? 'blue' : t.type === 'expense' ? 'red' : t.type === 'liability' ? 'green' : t.type === 'equity' ? 'purple' : 'amber'} className="mt-2">
-              طبيعته: {t.normalSide === 'debit' ? 'مدين' : 'دائن'}
-            </Badge>
-          </button>
-        ))}
+        {ACCOUNT_TYPES.map((t) => {
+          const Icon = TYPE_ICONS[t.type]
+          return (
+            <button
+              key={t.type}
+              onClick={() => setSelected(selected === t.type ? null : t.type)}
+              className={cn(
+                'rounded-xl border-2 px-4 py-3 text-center transition',
+                selected === t.type
+                  ? cn(TYPE_BG[t.type], 'ring-2 ring-blue-400 shadow-md')
+                  : 'border-slate-200 bg-white hover:border-blue-300 dark:border-slate-700 dark:bg-slate-800/60'
+              )}
+            >
+              <div className="mx-auto mb-1 text-slate-600 dark:text-slate-300">
+                <Icon size={24} />
+              </div>
+              <div className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{t.nameAr}</div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 lang-en">{t.nameEn}</div>
+              <Badge color={t.type === 'asset' ? 'blue' : t.type === 'expense' ? 'red' : t.type === 'liability' ? 'green' : t.type === 'equity' ? 'purple' : 'amber'} className="mt-2">
+                طبيعته: {t.normalSide === 'debit' ? 'مدين' : 'دائن'}
+              </Badge>
+            </button>
+          )
+        })}
       </div>
 
       {active && (
@@ -51,13 +66,17 @@ export function AccountTypes() {
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/10">
-              <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">📈 عند الزيادة</div>
+              <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                <IconChartUp size={13} /> عند الزيادة
+              </div>
               <div className="text-lg font-extrabold text-emerald-800 dark:text-emerald-200">
                 {active.increaseSide === 'debit' ? 'مدين' : 'دائن'}
               </div>
             </div>
             <div className="rounded-xl border border-orange-200 bg-orange-50 p-3 dark:border-orange-500/30 dark:bg-orange-500/10">
-              <div className="text-xs font-bold text-orange-600 dark:text-orange-400">📉 عند النقص</div>
+              <div className="flex items-center gap-1 text-xs font-bold text-orange-600 dark:text-orange-400">
+                <IconChartDown size={13} /> عند النقص
+              </div>
               <div className="text-lg font-extrabold text-orange-800 dark:text-orange-200">
                 {active.decreaseSide === 'debit' ? 'مدين' : 'دائن'}
               </div>
@@ -75,8 +94,9 @@ export function AccountTypes() {
             </div>
           </div>
 
-          <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm font-bold text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
-            🧠 {active.phoneRule}
+          <div className="mt-3 flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm font-bold text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
+            <IconRule size={16} className="mt-0.5 shrink-0" />
+            <span>{active.phoneRule}</span>
           </div>
         </Card>
       )}

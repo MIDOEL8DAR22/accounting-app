@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
-import { Card, Button, Badge, ProgressBar } from '../components/ui'
+import { Card, Button, Badge, ProgressBar, DifficultyStars } from '../components/ui'
 import { QUIZ_QUESTIONS } from '../data/quizzes'
 import { recordQuiz } from '../lib/progress'
 import { cn } from '../lib/cn'
+import { IconPen, IconAward, IconTarget, IconFlame, IconClipboard, IconRefresh, IconCheck, IconX, IconArrowRight } from '../components/icons'
 
 interface QuizAnswer {
   selected: number
@@ -31,7 +32,10 @@ export function Quiz() {
   if (!started) {
     return (
       <div className="max-w-xl mx-auto space-y-6">
-        <h1 className="text-xl font-extrabold text-slate-800 dark:text-slate-100">📝 اختبار المحاسبة</h1>
+        <h1 className="flex items-center gap-2 text-xl font-extrabold text-slate-800 dark:text-slate-100">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"><IconPen size={18} /></span>
+          اختبار المحاسبة
+        </h1>
         <Card>
           <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">اختار مستوى الصعوبة:</p>
           <div className="grid grid-cols-3 gap-2 mb-4">
@@ -44,7 +48,7 @@ export function Quiz() {
                   difficulty === d ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/15 dark:text-blue-300' : 'border-slate-200 dark:border-slate-700'
                 )}
               >
-                {d === 0 ? 'الكل' : '⭐'.repeat(d)}
+                {d === 0 ? 'الكل' : `مستوى ${d}`}
               </button>
             ))}
           </div>
@@ -74,14 +78,16 @@ export function Quiz() {
     return (
       <div className="max-w-xl mx-auto space-y-6">
         <Card className="text-center">
-          <div className="text-5xl mb-3">{pct >= 80 ? '🎉' : pct >= 50 ? '👍' : '💪'}</div>
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+            {pct >= 80 ? <IconAward size={32} /> : pct >= 50 ? <IconTarget size={32} /> : <IconFlame size={32} />}
+          </div>
           <div className="text-3xl font-extrabold text-slate-800 dark:text-slate-100">{pct}%</div>
           <div className="text-sm text-slate-600 dark:text-slate-300">
             {score} من {quiz.length} صح
           </div>
           <div className="mt-2">
             {pct >= 80 ? (
-              <Badge color="green">ممتاز! أنت عندك معلومات قوية 🎯</Badge>
+              <Badge color="green">ممتاز! أنت عندك معلومات قوية</Badge>
             ) : pct >= 50 ? (
               <Badge color="amber">كويس — بس في أماكن محتاج تراجعها</Badge>
             ) : (
@@ -92,7 +98,7 @@ export function Quiz() {
 
         {topWeak.length > 0 && (
           <Card>
-            <h3 className="mb-2 text-sm font-extrabold text-slate-800 dark:text-slate-100">📍 أماكن محتاج تراجع:</h3>
+            <h3 className="mb-2 flex items-center gap-1.5 text-sm font-extrabold text-slate-800 dark:text-slate-100"><IconTarget size={16} className="text-rose-500" /> أماكن محتاج تراجع:</h3>
             <div className="space-y-1">
               {topWeak.map(([topic, count]) => (
                 <div key={topic} className="rounded-lg bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
@@ -104,7 +110,7 @@ export function Quiz() {
         )}
 
         <Card>
-          <h3 className="mb-2 text-sm font-extrabold text-slate-800 dark:text-slate-100">📋 تقرير الأخطاء:</h3>
+          <h3 className="mb-2 flex items-center gap-1.5 text-sm font-extrabold text-slate-800 dark:text-slate-100"><IconClipboard size={16} className="text-blue-500" /> تقرير الأخطاء:</h3>
           <div className="space-y-2 max-h-80 overflow-y-auto">
             {mistakes.map((m, i) => (
               <div key={i} className="rounded-lg border border-rose-200 bg-rose-50 p-3 dark:border-rose-500/30 dark:bg-rose-500/10">
@@ -122,7 +128,7 @@ export function Quiz() {
         </Card>
 
         <Button onClick={() => { setStarted(false); setAnswers([]); setCurrentQ(0); setShowResult(false); setSelected(null) }} className="w-full">
-          🔄 اختبار تاني
+          <IconRefresh size={15} /> اختبار تاني
         </Button>
       </div>
     )
@@ -131,7 +137,10 @@ export function Quiz() {
   return (
     <div className="max-w-xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-extrabold text-slate-800 dark:text-slate-100">📝 اختبار</h1>
+        <h1 className="flex items-center gap-2 text-lg font-extrabold text-slate-800 dark:text-slate-100">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"><IconPen size={18} /></span>
+          اختبار
+        </h1>
         <span className="text-sm font-bold text-slate-500">{currentQ + 1}/{quiz.length}</span>
       </div>
 
@@ -140,7 +149,7 @@ export function Quiz() {
       <Card className="space-y-4">
         <div className="flex items-center gap-2">
           <Badge color="slate">{question.topic}</Badge>
-          <span className="text-xs text-slate-400">⭐'.repeat(question.difficulty)</span>
+          <DifficultyStars level={question.difficulty} />
         </div>
         <div className="text-base font-bold text-slate-800 dark:text-slate-100">{question.question}</div>
 
@@ -166,8 +175,11 @@ export function Quiz() {
                         : 'border-slate-200 hover:border-blue-300 dark:border-slate-700 dark:bg-slate-800'
                 )}
               >
-                {answered && isCorrect ? '✅ ' : answered && isSelected ? '❌ ' : ''}
+                <span className="inline-flex items-center gap-1.5">
+                {answered && isCorrect && <IconCheck size={15} className="text-emerald-500" />}
+                {answered && isSelected && !isCorrect && <IconX size={15} className="text-rose-500" />}
                 {opt}
+              </span>
               </button>
             )
           })}
@@ -180,7 +192,9 @@ export function Quiz() {
               ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10'
               : 'border-rose-200 bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10'
           )}>
-            <div className="font-extrabold mb-1">{answers[currentQ]?.correct ? '✅ صح!' : '❌ غلط!'}</div>
+            <div className="mb-1 flex items-center gap-1.5 font-extrabold">
+              {answers[currentQ]?.correct ? (<><IconCheck size={16} className="text-emerald-500" /> صح!</>) : (<><IconX size={16} className="text-rose-500" /> غلط!</>)}
+            </div>
             <div className="text-slate-700 dark:text-slate-200">{question.explanation}</div>
           </div>
         )}
@@ -205,7 +219,7 @@ export function Quiz() {
               setShowResult(true)
             }
           }} className="w-full">
-            {currentQ < quiz.length - 1 ? 'السؤال الجاي ←' : 'عرض النتيجة'}
+            {currentQ < quiz.length - 1 ? (<><IconArrowRight size={15} /> السؤال الجاي</>) : 'عرض النتيجة'}
           </Button>
         )}
       </Card>

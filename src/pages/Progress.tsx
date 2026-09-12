@@ -8,6 +8,7 @@ import {
 } from '../lib/progress'
 import { STAGES } from '../data/stages'
 import { useState } from 'react'
+import { IconChartUp, IconTrash, IconFlame, IconTarget, IconShield, IconBook, IconAlert } from '../components/icons'
 
 export function Progress() {
   const [refresh, setRefresh] = useState(0)
@@ -29,8 +30,11 @@ export function Progress() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-extrabold text-slate-800 dark:text-slate-100">📈 تقدمك</h1>
-        <Button variant="danger" onClick={handleReset} className="text-xs">🗑️ إعادة التقدم</Button>
+        <h1 className="flex items-center gap-2 text-xl font-extrabold text-slate-800 dark:text-slate-100">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"><IconChartUp size={18} /></span>
+          تقدمك
+        </h1>
+        <Button variant="danger" onClick={handleReset} className="text-xs"><IconTrash size={13} /> إعادة التقدم</Button>
       </div>
 
       <Card>
@@ -58,8 +62,9 @@ export function Progress() {
           <div className="text-xs font-bold text-slate-500 dark:text-slate-400">نقاط</div>
         </Card>
         <Card className="text-center">
-          <div className="text-2xl font-extrabold text-purple-600 dark:text-purple-400">
-            {progress.currentStreak} 🔥
+          <div className="flex items-center justify-center gap-1 text-2xl font-extrabold text-purple-600 dark:text-purple-400">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 text-purple-500 dark:bg-purple-500/10 dark:text-purple-400"><IconFlame size={20} /></span>
+            <span>{progress.currentStreak}</span>
           </div>
           <div className="text-xs font-bold text-slate-500 dark:text-slate-400">أيام السلسلة</div>
         </Card>
@@ -67,12 +72,12 @@ export function Progress() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <h2 className="mb-3 text-sm font-extrabold text-slate-700 dark:text-slate-200">📍 مناطق الضعف</h2>
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-extrabold text-slate-700 dark:text-slate-200"><span className="text-rose-500"><IconTarget size={16} /></span> مناطق الضعف</h2>
           {weak.length > 0 ? (
             <div className="space-y-2">
               {weak.map((topic) => (
                 <div key={topic} className="flex items-center justify-between rounded-lg bg-rose-50 px-3 py-2 dark:bg-rose-500/10">
-                  <span className="text-sm font-bold text-rose-700 dark:text-rose-300">{topic}</span>
+                  <span className="flex items-center gap-2 text-sm font-bold text-rose-700 dark:text-rose-300"><IconAlert size={14} /> {topic}</span>
                   <Link to="/exercises">
                     <Button variant="ghost" className="text-xs">راجع دلوقتي</Button>
                   </Link>
@@ -85,7 +90,7 @@ export function Progress() {
         </Card>
 
         <Card>
-          <h2 className="mb-3 text-sm font-extrabold text-slate-700 dark:text-slate-200">💪 نقاط القوة</h2>
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-extrabold text-slate-700 dark:text-slate-200"><span className="text-emerald-500"><IconShield size={16} /></span> نقاط القوة</h2>
           {Object.entries(progress.strongTopics).length > 0 ? (
             <div className="space-y-2">
               {Object.entries(progress.strongTopics)
@@ -105,7 +110,7 @@ export function Progress() {
       </div>
 
       <Card>
-        <h2 className="mb-3 text-sm font-extrabold text-slate-700 dark:text-slate-200">📚 المراحل</h2>
+        <h2 className="mb-3 flex items-center gap-2 text-sm font-extrabold text-slate-700 dark:text-slate-200"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"><IconBook size={16} /></span> المراحل</h2>
         <div className="space-y-3">
           {STAGES.map((s) => {
             const done = progress.completedStages.includes(s.id)

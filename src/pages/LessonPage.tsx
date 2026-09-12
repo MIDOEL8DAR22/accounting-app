@@ -1,9 +1,10 @@
 import { useParams, Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '../components/ui'
 import { LessonBlockView } from '../components/LessonBlocks'
 import { LESSONS, STAGES } from '../data/stages'
-import { getProgress, completeLesson } from '../lib/progress'
+import { getProgress, completeLesson, touchLesson } from '../lib/progress'
+import { IconCheck, IconCheckCircle, IconArrowRight, IconArrowLeft, IconDown, IconTarget } from '../components/icons'
 
 export function LessonPage() {
   const { lessonId } = useParams<{ lessonId: string }>()
@@ -11,6 +12,10 @@ export function LessonPage() {
   const progress = getProgress()
   const done = lesson ? progress.completedLessons.includes(lesson.id) : false
   const [expanded, setExpanded] = useState<number | null>(0)
+
+  useEffect(() => {
+    if (lesson) touchLesson(lesson.id)
+  }, [lessonId])
 
   if (!lesson) return <div className="text-center py-12">الدرس غير موجود</div>
 
@@ -29,8 +34,8 @@ export function LessonPage() {
 
   return (
     <div className="space-y-6">
-      <Link to={`/stages/${lesson.stageId}`} className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400">
-        ← العودة: المرحلة {lesson.stageId} — {stage?.title}
+      <Link to={`/stages/${lesson.stageId}`} className="inline-flex items-center gap-1 text-sm font-bold text-blue-600 hover:underline dark:text-blue-400">
+        <IconArrowLeft size={15} /> العودة: المرحلة {lesson.stageId} — {stage?.title}
       </Link>
 
       <div>
@@ -47,7 +52,7 @@ export function LessonPage() {
               {isVisible && <LessonBlockView block={block} />}
               {isNext && (
                 <Button onClick={() => setExpanded(i)} variant="ghost" className="w-full border border-dashed border-slate-300 dark:border-slate-600">
-                  ▼ اضغط كمان عشان تكمل
+                  <IconDown size={16} /> اضغط كمان عشان تكمل
                 </Button>
               )}
             </div>
@@ -59,10 +64,12 @@ export function LessonPage() {
         <div className="text-center space-y-3 pt-4 border-t border-slate-200 dark:border-slate-700">
           {!done ? (
             <Button onClick={handleComplete} variant="success" className="px-8">
-              ✅ أتممت الدرس!
+              <IconCheck size={16} /> أتممت الدرس!
             </Button>
           ) : (
-            <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400">✅ انت خلّيت الدرس ده</div>
+            <div className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-600 dark:text-emerald-400">
+              <IconCheckCircle size={16} /> انت خلّيت الدرس ده
+            </div>
           )}
         </div>
       )}
@@ -70,16 +77,16 @@ export function LessonPage() {
       <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
         {prev ? (
           <Link to={`/lesson/${prev.id}`} className="flex-1">
-            <Button variant="secondary" className="w-full">← الدرس اللي فات</Button>
+            <Button variant="secondary" className="w-full"><IconArrowRight size={15} /> الدرس اللي فات</Button>
           </Link>
         ) : <div />}
         {next ? (
           <Link to={`/lesson/${next.id}`} className="flex-1">
-            <Button className="w-full">الدرس الجاي ←</Button>
+            <Button className="w-full"><IconArrowLeft size={15} /> الدرس الجاي</Button>
           </Link>
         ) : (
           <Link to="/learn" className="flex-1">
-            <Button variant="success" className="w-full">🎯 رجوع للمراحل</Button>
+            <Button variant="success" className="w-full"><IconTarget size={15} /> رجوع للمراحل</Button>
           </Link>
         )}
       </div>

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Card, ProgressBar } from '../components/ui'
+import { IconStage, IconCheck, IconTarget } from '../components/icons'
 import { STAGES } from '../data/stages'
 import { getProgress } from '../lib/progress'
 
@@ -25,16 +26,24 @@ export function StartLearning() {
           return (
             <Card key={stage.id} className="overflow-hidden">
               <Link to={`/stages/${stage.id}`} className="flex items-start gap-4">
-                <div className="text-3xl">{stage.icon}</div>
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                  <IconStage name={stage.icon} size={24} />
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <h2 className="text-base font-extrabold text-slate-800 dark:text-slate-100">
                       المرحلة {stage.id}: {stage.title}
                     </h2>
-                    {done && <span className="text-xs text-emerald-500">✅ مكتمل</span>}
+                    {done && (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                        <IconCheck size={13} /> مكتمل
+                      </span>
+                    )}
                   </div>
                   <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{stage.tagline}</p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500">🎯 {stage.goal}</p>
+                  <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
+                    <IconTarget size={12} className="shrink-0" /> {stage.goal}
+                  </p>
                   <div className="mt-2 flex items-center gap-3">
                     <ProgressBar value={pct} className="flex-1" />
                     <span className="text-xs font-bold text-slate-400">{lessonsDone}/{stage.lessons.length}</span>

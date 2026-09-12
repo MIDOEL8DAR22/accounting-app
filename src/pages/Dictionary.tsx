@@ -3,6 +3,7 @@ import { Card, Badge } from '../components/ui'
 import { searchDictionary, SEARCH_HINTS } from '../data/accountDictionary'
 import { TYPE_LABELS } from '../data/accountTypes'
 import type { AccountMapping } from '../types'
+import { IconSearch, IconPen, IconAlert, IconInfo } from '../components/icons'
 
 export function Dictionary() {
   const [query, setQuery] = useState('')
@@ -17,20 +18,23 @@ export function Dictionary() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 sm:text-2xl">🔎 قاموس استخراج الحسابات</h1>
+        <h1 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 sm:text-2xl">قاموس استخراج الحسابات</h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           اكتب كلمة من الجملة المحاسبية وهنقولك الحساب اللي بتاعها
         </p>
       </div>
 
       <div className="flex gap-2">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => { setQuery(e.target.value); setSelected(null) }}
-          placeholder="اكتب مثلاً: مورد، عميل، إيجار، تأمين..."
-          className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-        />
+        <div className="relative flex-1">
+          <IconSearch size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setSelected(null) }}
+            placeholder="اكتب مثلاً: مورد، عميل، إيجار، تأمين..."
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-10 text-sm font-semibold placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+          />
+        </div>
         <button onClick={handleClick} className="rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700">
           عشوائي
         </button>
@@ -77,12 +81,16 @@ export function Dictionary() {
                   </div>
                   <div className="space-y-1">
                     {m.examples.map((ex, i) => (
-                      <div key={i} className="text-xs text-slate-600 dark:text-slate-300">📝 {ex}</div>
+                      <div key={i} className="flex items-start gap-1.5 text-xs text-slate-600 dark:text-slate-300">
+                        <IconPen size={12} className="mt-0.5 shrink-0 text-slate-400" />
+                        <span>{ex}</span>
+                      </div>
                     ))}
                   </div>
                   {m.note && (
-                    <div className="rounded-lg bg-amber-50 p-2 text-xs font-bold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-                      ⚠️ {m.note}
+                    <div className="flex items-start gap-1.5 rounded-lg bg-amber-50 p-2 text-xs font-bold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
+                      <IconAlert size={13} className="mt-0.5 shrink-0" />
+                      <span>{m.note}</span>
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-2 text-xs">
@@ -108,7 +116,9 @@ export function Dictionary() {
 
       {query.trim() && results.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-4xl mb-3">🔍</div>
+          <div className="mx-auto mb-3 w-12 h-12 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-slate-800">
+            <IconInfo size={26} />
+          </div>
           <div className="text-sm text-slate-500 dark:text-slate-400">مفيش نتيجة لكلمة "{query}" — جرّب كلمة تانية</div>
         </div>
       )}

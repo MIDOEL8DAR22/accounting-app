@@ -1,22 +1,52 @@
+import type { ReactNode } from 'react'
 import type { StepResult } from '../types'
 import { Card } from './ui'
 import { formatAmount } from '../lib/engine'
 import { TYPE_BG } from '../data/accountTypes'
 import { cn } from '../lib/cn'
+import {
+  IconPen,
+  IconSearch,
+  IconTag,
+  IconChartUp,
+  IconChartDown,
+  IconScale,
+  IconNotebook,
+  IconDown,
+  IconRule,
+  IconCheck,
+} from './icons'
+
+function StepLabel({ icon, text }: { icon: ReactNode; text: string }) {
+  return (
+    <div className="mb-1 flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
+      <span className="text-blue-500">{icon}</span>
+      <span>{text}</span>
+    </div>
+  )
+}
+
+function StepCard({ children }: { children: ReactNode }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
+      {children}
+    </div>
+  )
+}
 
 export function DecisionFlow({ result, showAmounts = false }: { result: StepResult; showAmounts?: boolean }) {
   return (
     <div className="space-y-3">
       {/* Step 1: transaction */}
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-        <div className="mb-1 text-xs font-bold text-slate-500 dark:text-slate-400">📝 الخطوة 1 — العملية</div>
+      <StepCard>
+        <StepLabel icon={<IconPen size={13} />} text="الخطوة 1 — العملية" />
         <div className="text-sm font-bold text-slate-800 dark:text-slate-100">{result.transaction}</div>
-      </div>
+      </StepCard>
 
       {/* Step 2: accounts */}
       <FlowArrow />
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-        <div className="mb-2 text-xs font-bold text-slate-500 dark:text-slate-400">🔎 الخطوة 2 — الحسابات المتأثرة</div>
+      <StepCard>
+        <StepLabel icon={<IconSearch size={13} />} text="الخطوة 2 — الحسابات المتأثرة" />
         <div className="flex flex-wrap gap-2">
           {result.accounts.map((a) => (
             <span key={a} className="rounded-lg bg-white px-3 py-1 text-sm font-bold text-slate-700 shadow-sm dark:bg-slate-700 dark:text-slate-100">
@@ -24,12 +54,12 @@ export function DecisionFlow({ result, showAmounts = false }: { result: StepResu
             </span>
           ))}
         </div>
-      </div>
+      </StepCard>
 
       {/* Step 3: account type */}
       <FlowArrow />
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-        <div className="mb-2 text-xs font-bold text-slate-500 dark:text-slate-400">🏷️ الخطوة 3 — نوع كل حساب</div>
+      <StepCard>
+        <StepLabel icon={<IconTag size={13} />} text="الخطوة 3 — نوع كل حساب" />
         <div className="space-y-1.5">
           {result.accountTypes.map((at) => (
             <div key={at.account} className="flex items-center justify-between gap-2">
@@ -41,35 +71,36 @@ export function DecisionFlow({ result, showAmounts = false }: { result: StepResu
             </div>
           ))}
         </div>
-      </div>
+      </StepCard>
 
       {/* Step 4: change */}
       <FlowArrow />
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-        <div className="mb-2 text-xs font-bold text-slate-500 dark:text-slate-400">📈 الخطوة 4 — زاد ولا نقص</div>
+      <StepCard>
+        <StepLabel icon={<IconChartUp size={13} />} text="الخطوة 4 — زاد ولا نقص" />
         <div className="space-y-1.5">
           {result.changes.map((c) => (
             <div key={c.account} className="flex items-center justify-between gap-2">
               <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{c.account}</span>
               <span
                 className={cn(
-                  'rounded-lg px-2.5 py-0.5 text-xs font-bold',
+                  'inline-flex items-center gap-1 rounded-lg px-2.5 py-0.5 text-xs font-bold',
                   c.change === 'increase'
                     ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
                     : 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300'
                 )}
               >
-                {c.changeAr} {c.change === 'increase' ? '📈' : '📉'}
+                {c.change === 'increase' ? <IconChartUp size={13} /> : <IconChartDown size={13} />}
+                {c.changeAr}
               </span>
             </div>
           ))}
         </div>
-      </div>
+      </StepCard>
 
       {/* Step 5: side */}
       <FlowArrow />
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-        <div className="mb-2 text-xs font-bold text-slate-500 dark:text-slate-400">↔️ الخطوة 5 — مدين أم دائن؟</div>
+      <StepCard>
+        <StepLabel icon={<IconScale size={13} />} text="الخطوة 5 — مدين أم دائن؟" />
         <div className="space-y-1.5">
           {result.sides.map((s) => (
             <div key={s.account} className="flex items-center justify-between gap-2">
@@ -90,12 +121,12 @@ export function DecisionFlow({ result, showAmounts = false }: { result: StepResu
             </div>
           ))}
         </div>
-      </div>
+      </StepCard>
 
       {/* Step 6: entry */}
       <FlowArrow />
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-        <div className="mb-2 text-xs font-bold text-slate-500 dark:text-slate-400">📒 الخطوة 6 — القيد اليومي</div>
+        <StepLabel icon={<IconNotebook size={13} />} text="الخطوة 6 — القيد اليومي" />
         <JournalEntryDisplay result={result} showAmounts={showAmounts} />
       </div>
     </div>
@@ -103,7 +134,7 @@ export function DecisionFlow({ result, showAmounts = false }: { result: StepResu
 }
 
 function FlowArrow() {
-  return <div className="flex justify-center text-slate-300 dark:text-slate-600">↓</div>
+  return <div className="flex justify-center text-slate-300 dark:text-slate-600"><IconDown size={16} /></div>
 }
 
 export function JournalEntryDisplay({ result, showAmounts = false }: { result: StepResult; showAmounts?: boolean }) {
@@ -185,7 +216,7 @@ export function EntryTable({ debit, credit }: { debit?: string; credit?: string 
                 <span className="text-slate-400">من حـ/ </span>
                 {debit}
               </td>
-              <td className="num px-3 py-2 text-center font-mono font-bold text-blue-700 dark:text-blue-400">✓</td>
+              <td className="num px-3 py-2 text-center font-mono font-bold text-blue-700 dark:text-blue-400"><IconCheck size={15} /></td>
               <td className="px-3 py-2 text-center text-slate-300">—</td>
             </tr>
           )}
@@ -196,7 +227,7 @@ export function EntryTable({ debit, credit }: { debit?: string; credit?: string 
                 {credit}
               </td>
               <td className="px-3 py-2 text-center text-slate-300">—</td>
-              <td className="num px-3 py-2 text-center font-mono font-bold text-emerald-700 dark:text-emerald-400">✓</td>
+              <td className="num px-3 py-2 text-center font-mono font-bold text-emerald-700 dark:text-emerald-400"><IconCheck size={15} /></td>
             </tr>
           )}
         </tbody>
@@ -211,8 +242,9 @@ export function WhyBox({ why, rule }: { why: string; rule?: string }) {
       <div className="mb-1 text-xs font-bold text-slate-500 dark:text-slate-400">لماذا؟</div>
       <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">{why}</p>
       {rule && (
-        <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
-          🧠 قاعدة للحفظ: {rule}
+        <div className="mt-3 flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+          <IconRule size={16} className="mt-0.5 shrink-0" />
+          <span>قاعدة للحفظ: {rule}</span>
         </div>
       )}
     </Card>

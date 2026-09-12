@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '../lib/cn'
+import { IconStar } from './icons'
 
 export function Card({ children, className, onClick }: { children: ReactNode; className?: string; onClick?: () => void }) {
   return (
@@ -89,13 +90,15 @@ export function ProgressBar({ value, color = 'bg-blue-600', className }: { value
 
 export function DifficultyStars({ level }: { level: number }) {
   return (
-    <span className="text-amber-500" title={`الصعوبة ${level}/5`}>
-      {'⭐'.repeat(level)}{'☆'.repeat(5 - level)}
+    <span className="inline-flex items-center gap-0.5 text-amber-500" title={`الصعوبة ${level}/5`}>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <IconStar key={i} size={14} className={i < level ? 'fill-amber-500 text-amber-500' : 'text-slate-300 dark:text-slate-600'} />
+      ))}
     </span>
   )
 }
 
-export function StatCard({ icon, label, value, sub, color = 'blue' }: { icon: string; label: string; value: ReactNode; sub?: string; color?: string }) {
+export function StatCard({ icon, label, value, sub, color = 'blue' }: { icon: ReactNode; label: string; value: ReactNode; sub?: string; color?: string }) {
   const ring: Record<string, string> = {
     blue: 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400',
     green: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -115,10 +118,10 @@ export function StatCard({ icon, label, value, sub, color = 'blue' }: { icon: st
   )
 }
 
-export function EmptyState({ icon, title, subtitle, action }: { icon: string; title: string; subtitle?: string; action?: ReactNode }) {
+export function EmptyState({ icon, title, subtitle, action }: { icon: ReactNode; title: string; subtitle?: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-      <div className="text-5xl">{icon}</div>
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">{icon}</div>
       <div className="text-lg font-bold text-slate-700 dark:text-slate-200">{title}</div>
       {subtitle && <div className="max-w-sm text-sm text-slate-500 dark:text-slate-400">{subtitle}</div>}
       {action}
