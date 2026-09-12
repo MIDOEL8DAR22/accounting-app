@@ -29,6 +29,8 @@ export interface UserProgress {
   dictionarySearches: number
   summaryViews: number
   dailyCards: { date: string; cardId: number; known: boolean }[]
+  accountTypesCompleted: string[]
+  accountMixedCompleted: boolean
 }
 
 const defaultProgress: UserProgress = {
@@ -55,6 +57,8 @@ const defaultProgress: UserProgress = {
   dictionarySearches: 0,
   summaryViews: 0,
   dailyCards: [],
+  accountTypesCompleted: [],
+  accountMixedCompleted: false,
 }
 
 export function getProgress(): UserProgress {
@@ -262,6 +266,22 @@ export function getProgressPercentage(): number {
     (stagesFraction * 0.4 + lessonsFraction * 0.3 + exercisesFraction * 0.15 + activityFraction * 0.15) *
     100
   return Math.round(Math.min(100, total))
+}
+
+export function completeAccountType(type: string): void {
+  const progress = getProgress()
+  if (!progress.accountTypesCompleted.includes(type)) {
+    progress.accountTypesCompleted.push(type)
+  }
+  progress.lastActivity = new Date().toISOString()
+  saveProgress(progress)
+}
+
+export function completeAccountMixed(): void {
+  const progress = getProgress()
+  progress.accountMixedCompleted = true
+  progress.lastActivity = new Date().toISOString()
+  saveProgress(progress)
 }
 
 export function resetProgress(): void {
