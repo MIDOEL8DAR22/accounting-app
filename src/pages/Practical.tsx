@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { Card, Button, Badge, DifficultyStars } from '../components/ui'
 import { SCENARIOS, computeLedger, computeSummary, type Scenario, type ScenarioTx } from '../data/practicalScenarios'
 import { getProgress, completePracticalScenario } from '../lib/progress'
@@ -18,7 +19,21 @@ import {
   IconArrowLeft,
   IconAward,
   IconRefresh,
+  IconTag,
+  IconFileText,
+  IconClipboard,
+  IconRocket,
+  IconSettings,
 } from '../components/icons'
+
+const SCENARIO_ICONS: Record<string, (size: number) => ReactNode> = {
+  supermarket: (s) => <IconTag size={s} />,
+  'translation-office': (s) => <IconFileText size={s} />,
+  'accounting-office': (s) => <IconClipboard size={s} />,
+  'contracting-company': (s) => <IconLandmark size={s} />,
+  'logistics-company': (s) => <IconRocket size={s} />,
+  'garment-factory': (s) => <IconSettings size={s} />,
+}
 
 interface RowFields {
   dA: string
@@ -104,12 +119,13 @@ export function Practical() {
 
         {SCENARIOS.map((s) => {
           const isDone = completed.includes(s.id)
+          const ScenIcon = SCENARIO_ICONS[s.id] ?? ((size: number) => <IconBriefcase size={size} />)
           return (
             <Card key={s.id} className="space-y-3 border-slate-200">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
-                    <IconBriefcase size={22} />
+                    {ScenIcon(22)}
                   </div>
                   <div>
                     <h2 className="font-bold text-slate-900">{s.title}</h2>
@@ -187,7 +203,7 @@ export function Practical() {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
-            <IconBriefcase size={22} />
+            {(SCENARIO_ICONS[scenario.id] ?? ((size: number) => <IconBriefcase size={size} />))(22)}
           </div>
           <div>
             <h1 className="text-xl font-extrabold text-slate-900">{scenario.title}</h1>
