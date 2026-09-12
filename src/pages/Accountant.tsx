@@ -242,7 +242,7 @@ export function Accountant() {
           <div className="mt-2 flex items-center justify-between gap-2">
             <p className="text-[11px] text-slate-400 flex items-center gap-1">
               <IconLightbulb size={12} /> مثال: "بعت بضاعة 5,000 نقدًا" — هيقترحلك القيد فورًا
-              {aiOn && <> · الأسئلة من برة القواعد بتروح لخدمة مجانية عامة (Pollinations) — ممكن تطفّيها من الزرار فوق</>}
+              {aiOn && <> · الأسئلة من برة القواعد بتروح للذكاء الحي المجاني — ممكن تطفّيه من الزرار فوق</>}
             </p>
             <Button variant="ghost" className="text-xs" onClick={() => { setMessages(initial); setInterview(null) }}>
               <IconRefresh size={13} /> مسح المحادثة

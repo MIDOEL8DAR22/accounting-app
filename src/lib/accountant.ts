@@ -211,8 +211,8 @@ export interface ChatMsg {
   content: string
 }
 
-const AI_ENDPOINT = 'https://text.pollinations.ai/openai'
-const AI_MODEL = 'openai'
+const AI_ENDPOINT = 'https://accounting-ai.midoel8dar666.workers.dev'
+const AI_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast'
 
 const SYSTEM_PROMPT =
   `أنت "المحاسب عادل" — محاسب أستاذ مصري خبرة 15 سنة في المحاسبة العملية والمكاتب والضرائب في مصر.
