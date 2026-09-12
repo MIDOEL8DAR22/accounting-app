@@ -17,6 +17,7 @@ import {
   IconBookMark,
   IconClock,
   IconFlame,
+  IconBriefcase,
 } from '../components/icons'
 
 export function Dashboard() {
@@ -169,6 +170,9 @@ export function Dashboard() {
               <IconTarget size={15} className="text-blue-500" /> أنشطة سريعة
             </h2>
             <div className="space-y-2">
+              <Link to="/practical">
+                <Button variant="hero" className="w-full"><IconBriefcase size={15} /> التطبيق العملي على الشغل</Button>
+              </Link>
               <Link to="/builder">
                 <Button variant="secondary" className="w-full"><IconNotebook size={15} /> منشئ القيد اليومي</Button>
               </Link>

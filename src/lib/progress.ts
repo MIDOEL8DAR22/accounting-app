@@ -31,6 +31,7 @@ export interface UserProgress {
   dailyCards: { date: string; cardId: number; known: boolean }[]
   accountTypesCompleted: string[]
   accountMixedCompleted: boolean
+  practicalCompleted: string[]
 }
 
 const defaultProgress: UserProgress = {
@@ -59,6 +60,7 @@ const defaultProgress: UserProgress = {
   dailyCards: [],
   accountTypesCompleted: [],
   accountMixedCompleted: false,
+  practicalCompleted: [],
 }
 
 export function getProgress(): UserProgress {
@@ -280,6 +282,16 @@ export function completeAccountType(type: string): void {
 export function completeAccountMixed(): void {
   const progress = getProgress()
   progress.accountMixedCompleted = true
+  progress.lastActivity = new Date().toISOString()
+  saveProgress(progress)
+}
+
+export function completePracticalScenario(scenarioId: string): void {
+  const progress = getProgress()
+  if (!progress.practicalCompleted.includes(scenarioId)) {
+    progress.practicalCompleted.push(scenarioId)
+    progress.totalPoints += 30
+  }
   progress.lastActivity = new Date().toISOString()
   saveProgress(progress)
 }

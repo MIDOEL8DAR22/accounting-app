@@ -21,6 +21,7 @@ import {
   IconMenu,
   IconX,
   IconDown,
+  IconBriefcase,
 } from './icons'
 
 const MAIN_ITEMS: { to: string; label: string; icon: ReactNode }[] = [
@@ -32,6 +33,7 @@ const MAIN_ITEMS: { to: string; label: string; icon: ReactNode }[] = [
 ]
 
 const TOOL_ITEMS: { to: string; label: string; icon: ReactNode }[] = [
+  { to: '/practical', label: 'التطبيق العملي', icon: <IconBriefcase size={17} /> },
   { to: '/account-types', label: 'أنواع الحسابات', icon: <IconTag size={17} /> },
   { to: '/solver', label: 'حل أي سؤال', icon: <IconBrain size={17} /> },
   { to: '/builder', label: 'منشئ القيد', icon: <IconNotebook size={17} /> },

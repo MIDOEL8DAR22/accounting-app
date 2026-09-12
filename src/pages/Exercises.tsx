@@ -3,6 +3,7 @@ import { Card, Button, Badge, DifficultyStars } from '../components/ui'
 import { EXERCISES, EXERCISE_LEVELS, LEVEL_LABELS, LEVEL_UNLOCK } from '../data/exercises'
 import { LESSONS } from '../data/stages'
 import { getProgress, recordExercise } from '../lib/progress'
+import { normAccount, acctMatch, parseAmountText, amountEqualText } from '../lib/entryCheck'
 import type { Exercise, ExerciseEntry } from '../types'
 import { cn } from '../lib/cn'
 import {
@@ -31,49 +32,6 @@ const getKind = (e: Exercise): 'mc' | 'text' | 'entry' => e.kind ?? (e.options ?
 
 /* ---------- entry helpers ---------- */
 
-const norm = (s: string) =>
-  s
-    .replace(/حـ/g, '')
-    .replace(/[^\u0621-\u064A\u0660-\u0669A-Za-z0-9]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase()
-
-const ACCOUNT_ALIASES: Record<string, string[]> = {
-  'الصندوق': ['النقدية', 'نقدية', 'الخزينة'],
-  'المدينون': ['العملاء', 'العميل', 'المدينين'],
-  'الدائنون': ['الموردون', 'المورد', 'الدائنين'],
-  'مردودات المشتريات': ['مرتجعات المشتريات', 'مردودات', 'مرتجعات'],
-  'رأس المال': ['راس المال', 'رأس مال'],
-  'مصروفات مقدمة': ['مصروفات مدفوعة مقدما', 'مصروف الإيجار المقدم', 'الإيجار المقدم', 'إيجار مدفوع مقدم'],
-  'تأمينات لدى الغير': ['تأمين لدى الغير', 'التأمين المدفوع'],
-  'تأمينات لدى الشركة': ['تأمين لدى الشركة', 'التأمين المستلم'],
-}
-
-const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩'
-
-const parseAmount = (s: string): number | null => {
-  const normalized = String(s).replace(/[\u0660-\u0669]/g, (d) => String(ARABIC_DIGITS.indexOf(d)))
-  const m = normalized.match(/\d[\d.,]*/)
-  return m ? parseFloat(m[0].replace(/,/g, '')) : null
-}
-
-const acctMatch = (user: string, expected: string) => {
-  const u = norm(user)
-  const e = norm(expected)
-  if (!u || !e) return false
-  if (u === e) return true
-  if (ACCOUNT_ALIASES[expected]?.some((a) => norm(a) === u)) return true
-  if (u.length >= 3 && (u.includes(e) || e.includes(u))) return true
-  return false
-}
-
-const amountEqual = (a: string, b: string) => {
-  const na = parseAmount(a)
-  const nb = parseAmount(b)
-  return na !== null && nb !== null && na === nb
-}
-
 interface EntryFields {
   dA: string
   dAmt: string
@@ -83,10 +41,10 @@ interface EntryFields {
 
 function gradeEntry(entry: ExerciseEntry, f: EntryFields) {
   const dAccOk = acctMatch(f.dA, entry.debit.account)
-  const dAmtOk = amountEqual(f.dAmt, entry.debit.amount)
+  const dAmtOk = amountEqualText(f.dAmt, entry.debit.amount)
   const cAccOk = acctMatch(f.cA, entry.credit.account)
-  const cAmtOk = amountEqual(f.cAmt, entry.credit.amount)
-  const balanced = amountEqual(f.dAmt, f.cAmt)
+  const cAmtOk = amountEqualText(f.cAmt, entry.credit.amount)
+  const balanced = amountEqualText(f.dAmt, f.cAmt)
   const correct = dAccOk && dAmtOk && cAccOk && cAmtOk && balanced
   return { dAccOk, dAmtOk, cAccOk, cAmtOk, balanced, correct }
 }
@@ -96,7 +54,7 @@ const EMPTY_ENTRY: EntryFields = { dA: '', dAmt: '', cA: '', cAmt: '' }
 /* ---------- text scoring ---------- */
 
 const wordMatches = (word: string, expected: string) => {
-  const e = norm(expected)
+  const e = normAccount(expected)
   if (!word || !e) return false
   if (word === e) return true
   if (word.length >= 2 && (e.includes(word) || word.includes(e))) return true
@@ -104,13 +62,13 @@ const wordMatches = (word: string, expected: string) => {
 }
 
 function textScore(userRaw: string, correctAnswer: string[]) {
-  const words = userRaw.split(/[,،]/).map(norm).filter(Boolean)
+  const words = userRaw.split(/[,،]/).map(normAccount).filter(Boolean)
   const matched = correctAnswer.filter((c) => words.some((w) => wordMatches(w, c)))
   return { correct: correctAnswer.length > 0 && matched.length === correctAnswer.length, words, matchedCount: matched.length }
 }
 
 function textDiagnose(userRaw: string, correctAnswer: string[]) {
-  const words = userRaw.split(/[,،]/).map(norm).filter(Boolean)
+  const words = userRaw.split(/[,،]/).map(normAccount).filter(Boolean)
   const missing = correctAnswer.filter((c) => !words.some((w) => wordMatches(w, c)))
   const extras = [...new Set(words.filter((w) => w.length >= 2 && !correctAnswer.some((c) => wordMatches(w, c))))]
   return { missing, extras }
@@ -323,8 +281,8 @@ export function Exercises() {
   const progress = Math.round(((currentIndex + 1) / pool.length) * 100)
   const entry = current.kind === 'entry' || (!current.options && current.entry) ? current.entry : undefined
   const verdict = entry && currentAnswer?.answered ? gradeEntry(entry, entryField) : null
-  const dNum = parseAmount(entryField.dAmt)
-  const cNum = parseAmount(entryField.cAmt)
+  const dNum = parseAmountText(entryField.dAmt)
+  const cNum = parseAmountText(entryField.cAmt)
   const liveBalanced = dNum !== null && cNum !== null && dNum === cNum
 
   return (
