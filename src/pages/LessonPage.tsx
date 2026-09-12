@@ -1,10 +1,12 @@
 import { useParams, Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { Button } from '../components/ui'
-import { LessonBlockView } from '../components/LessonBlocks'
+import { LessonBlockView, blockSpeech } from '../components/LessonBlocks'
+import { SpeakButton, SpeechUnsupported } from '../components/SpeakButton'
 import { LESSONS, STAGES } from '../data/stages'
 import { getProgress, completeLesson, touchLesson } from '../lib/progress'
-import { IconCheck, IconCheckCircle, IconArrowRight, IconArrowLeft, IconDown, IconTarget, IconEye } from '../components/icons'
+import { stopSpeech, speechAvailable } from '../lib/speech'
+import { IconCheck, IconCheckCircle, IconArrowRight, IconArrowLeft, IconDown, IconTarget, IconEye, IconSpeaker } from '../components/icons'
 
 const TYPE_LABEL: Record<string, string> = {
   text: 'جزء جديد',
@@ -15,6 +17,15 @@ const TYPE_LABEL: Record<string, string> = {
   list: 'قائمة',
   memory: 'تذكّر',
   steps: 'خطوات',
+}
+
+const STAGE_GRADIENT: Record<number, string> = {
+  1: 'from-blue-700 via-blue-600 to-indigo-700',
+  2: 'from-indigo-700 via-blue-600 to-violet-700',
+  3: 'from-fuchsia-700 via-purple-600 to-indigo-700',
+  4: 'from-emerald-700 via-teal-600 to-blue-700',
+  5: 'from-amber-600 via-orange-600 to-rose-600',
+  6: 'from-rose-700 via-red-600 to-orange-600',
 }
 
 export function LessonPage() {
@@ -28,6 +39,10 @@ export function LessonPage() {
     if (lesson) touchLesson(lesson.id)
   }, [lessonId])
 
+  useEffect(() => {
+    return () => stopSpeech()
+  }, [])
+
   if (!lesson) return <div className="text-center py-12">الدرس غير موجود</div>
 
   const stage = STAGES.find((s) => s.id === lesson.stageId)
@@ -39,6 +54,8 @@ export function LessonPage() {
   const revealedCount = expanded === 'all' ? lesson.blocks.length : Math.min((expanded ?? 0) + 1, lesson.blocks.length)
   const isVisible = (i: number) => expanded === 'all' || i <= expanded
   const isNext = (i: number) => expanded !== 'all' && i === expanded + 1
+
+  const fullSpeech = [lesson.title, lesson.subtitle, ...lesson.blocks.map(blockSpeech)].filter(Boolean).join('. ')
 
   const handleComplete = () => {
     if (lesson.id && !done) {
@@ -53,44 +70,61 @@ export function LessonPage() {
         <IconArrowLeft size={15} /> العودة: المرحلة {lesson.stageId} — {stage?.title}
       </Link>
 
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-blue-700 via-blue-600 to-indigo-700 p-5 text-white shadow-lg shadow-blue-700/20 sm:p-6">
-        <div className="absolute -left-10 -top-10 h-36 w-36 rounded-full bg-white/10 blur-2xl" />
+      <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-l ${STAGE_GRADIENT[lesson.stageId] ?? STAGE_GRADIENT[1]} p-6 text-white shadow-xl shadow-blue-700/20 sm:p-8`}>
+        <div className="absolute -left-12 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute -bottom-16 left-1/3 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute left-6 top-6 h-16 w-16 rounded-full border border-white/20" />
+        <div className="absolute bottom-6 right-8 h-8 w-8 rounded-full bg-white/20" />
         <div className="relative">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/15 px-2.5 py-1 text-xs font-bold">
+            <span className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-bold backdrop-blur">
               <IconTarget size={13} /> المرحلة {lesson.stageId} — {stage?.title}
             </span>
             {done && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-1 text-xs font-bold text-emerald-200">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/25 px-3 py-1 text-xs font-bold text-emerald-200">
                 <IconCheckCircle size={13} /> مكتملة
               </span>
             )}
           </div>
-          <h1 className="mt-3 text-2xl font-extrabold sm:text-3xl">{lesson.title}</h1>
-          {lesson.subtitle && <p className="mt-1 text-sm text-blue-100 sm:text-base">{lesson.subtitle}</p>}
+          <h1 className="mt-4 text-3xl font-extrabold leading-tight sm:text-4xl">{lesson.title}</h1>
+          {lesson.subtitle && <p className="mt-2 text-base text-blue-100 sm:text-lg">{lesson.subtitle}</p>}
+          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold text-blue-100">
+            <span className="inline-flex items-center gap-1.5"><IconSpeaker size={15} /> استمع للدرس بصوت عربي</span>
+            <span className="hidden text-blue-200/60 sm:inline">•</span>
+            <span>الكتلة {currentIndex + 1} من {stageLessons.length}</span>
+            <span className="hidden text-blue-200/60 sm:inline">•</span>
+            <span>{lesson.blocks.length} أجزاء</span>
+          </div>
           {expanded !== 'all' && (
-            <div className="mt-4">
-              <div className="mb-1 flex items-center justify-between text-[11px] font-bold text-blue-100">
+            <div className="mt-5">
+              <div className="mb-1 flex items-center justify-between text-xs font-bold text-blue-100">
                 <span>تقدمك في الدرس</span>
                 <span>{revealedCount} / {lesson.blocks.length}</span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/25">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-white/25">
                 <div className="h-full rounded-full bg-white transition-all duration-500" style={{ width: `${(revealedCount / lesson.blocks.length) * 100}%` }} />
               </div>
             </div>
           )}
-          <div className="mt-4 flex items-center gap-3 text-xs font-bold text-blue-100">
-            <span>الكتلة {currentIndex + 1} من {stageLessons.length}</span>
-            <span>•</span>
-            <span>{lesson.blocks.length} أجزاء</span>
-          </div>
         </div>
       </div>
 
-      <div className="space-y-5">
+      <div className="flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-blue-500/20 dark:bg-blue-500/10">
+        <div>
+          <div className="text-base font-extrabold text-blue-900 dark:text-blue-100">استمع للدرس كامل</div>
+          <div className="text-xs text-blue-600/80 dark:text-blue-300/70">قراءة عربية مسموعة للدرس من الأول لآخره، فقرة فقرة</div>
+        </div>
+        {speechAvailable() ? (
+          <SpeakButton speechKey={`lesson-${lesson.id}`} text={fullSpeech} label="اقرأ الدرس كامل" size={17} />
+        ) : (
+          <SpeechUnsupported />
+        )}
+      </div>
+
+      <div className="space-y-6">
         {lesson.blocks.map((block, i) => (
           <div key={i} className="space-y-3">
-            {isVisible(i) && <LessonBlockView block={block} />}
+            {isVisible(i) && <LessonBlockView block={block} index={i + 1} />}
             {isNext(i) && (
               <Button onClick={() => setExpanded(i)} variant="secondary" className="w-full py-3">
                 <IconDown size={16} /> تكمّل الدرس — {TYPE_LABEL[block.type] ?? 'جزء جديد'}

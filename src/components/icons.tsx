@@ -550,3 +550,18 @@ export const IconKey = (p: IconProps) => (
     <path d="m15.5 7.5 3 3L22 7l-3-3" />
   </Base>
 )
+
+export const IconSpeaker = (p: IconProps) => (
+  <Base {...p}>
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+  </Base>
+)
+
+export const IconPause = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="6" y="4" width="4" height="16" rx="1" />
+    <rect x="14" y="4" width="4" height="16" rx="1" />
+  </Base>
+)
