@@ -232,57 +232,55 @@ export function Dashboard() {
               </div>
             )}
           </Card>
-
-          {/* Quick actions */}
-          <Card>
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-extrabold text-slate-700 dark:text-slate-200">
-              <IconTarget size={15} className="text-blue-500" /> أنشطة سريعة
-            </h2>
-            <div className="space-y-2">
-              {QUICK_ACTIONS.slice(0, 2).map((a) => (
-                <Link key={a.to} to={a.to} className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-l p-4 text-white shadow-md transition hover:brightness-110 hover:shadow-lg active:scale-[0.99]" style={a.grad ? { backgroundImage: a.grad } : undefined}>
-                  <div className="absolute -left-6 -top-6 h-20 w-20 rounded-full bg-white/10 blur-xl" />
-                  {a.hot && (
-                    <span className="absolute top-2 left-2 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold">
-                      الأكثر استخدامًا
-                    </span>
-                  )}
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white">
-                    {a.icon}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-extrabold sm:text-base">{a.title}</div>
-                    <div className="text-xs text-white/85">{a.desc}</div>
-                  </div>
-                  <IconArrowLeft size={16} className="shrink-0 text-white/70 transition group-hover:-translate-x-0.5" />
-                </Link>
-              ))}
-              <div className="grid grid-cols-2 gap-2">
-                {QUICK_ACTIONS.slice(2).map((a) => (
-                  <Link
-                    key={a.to}
-                    to={a.to}
-                    className={`group flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white p-3 transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-sm active:scale-[0.99] dark:border-slate-700 dark:bg-slate-800/70 ${
-                      a.wide ? 'col-span-2' : ''
-                    }`}
-                  >
-                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${a.chip ?? ''}`}>
-                      {a.icon}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-xs font-extrabold text-slate-800 dark:text-slate-100 sm:text-sm">
-                        {a.title}
-                      </div>
-                      <div className="truncate text-[11px] text-slate-500 dark:text-slate-400">{a.desc}</div>
-                    </div>
-                    <IconArrowLeft size={14} className="shrink-0 text-slate-300 transition group-hover:text-blue-500 dark:text-slate-600" />
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </Card>
         </div>
       </div>
+
+      {/* Quick actions (full width) */}
+      <Card>
+        <h2 className="mb-3 flex items-center gap-2 text-sm font-extrabold text-slate-700 dark:text-slate-200">
+          <IconTarget size={15} className="text-blue-500" /> أنشطة سريعة
+        </h2>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {QUICK_ACTIONS.slice(0, 2).map((a) => (
+            <Link key={a.to} to={a.to} className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-l p-4 text-white shadow-md transition hover:brightness-110 hover:shadow-lg active:scale-[0.99]" style={a.grad ? { backgroundImage: a.grad } : undefined}>
+              <div className="absolute -left-6 -top-6 h-20 w-20 rounded-full bg-white/10 blur-xl" />
+              {a.hot && (
+                <span className="absolute top-2 left-2 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold">
+                  الأكثر استخدامًا
+                </span>
+              )}
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white">
+                {a.icon}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-extrabold sm:text-base">{a.title}</div>
+                <div className="text-xs text-white/85">{a.desc}</div>
+              </div>
+              <IconArrowLeft size={16} className="shrink-0 text-white/70 transition group-hover:-translate-x-0.5" />
+            </Link>
+          ))}
+        </div>
+        <div className="mt-2 grid grid-cols-2 gap-2 md:grid-cols-5">
+          {QUICK_ACTIONS.slice(2).map((a) => (
+            <Link
+              key={a.to}
+              to={a.to}
+              className="group flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white p-3 transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-sm active:scale-[0.99] dark:border-slate-700 dark:bg-slate-800/70"
+            >
+              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${a.chip ?? ''}`}>
+                {a.icon}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-extrabold text-slate-800 dark:text-slate-100 sm:text-sm">
+                  {a.title}
+                </div>
+                <div className="text-[11px] leading-tight text-slate-500 dark:text-slate-400">{a.desc}</div>
+              </div>
+              <IconArrowLeft size={14} className="shrink-0 text-slate-300 transition group-hover:text-blue-500 dark:text-slate-600" />
+            </Link>
+          ))}
+        </div>
+      </Card>
     </div>
   )
 }
