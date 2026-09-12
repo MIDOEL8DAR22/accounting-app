@@ -32,6 +32,7 @@ export interface UserProgress {
   accountTypesCompleted: string[]
   accountMixedCompleted: boolean
   practicalCompleted: string[]
+  aiAssistant: boolean
 }
 
 const defaultProgress: UserProgress = {
@@ -61,6 +62,7 @@ const defaultProgress: UserProgress = {
   accountTypesCompleted: [],
   accountMixedCompleted: false,
   practicalCompleted: [],
+  aiAssistant: true,
 }
 
 export function getProgress(): UserProgress {
@@ -292,6 +294,13 @@ export function completePracticalScenario(scenarioId: string): void {
     progress.practicalCompleted.push(scenarioId)
     progress.totalPoints += 30
   }
+  progress.lastActivity = new Date().toISOString()
+  saveProgress(progress)
+}
+
+export function setAiAssistant(on: boolean): void {
+  const progress = getProgress()
+  progress.aiAssistant = on
   progress.lastActivity = new Date().toISOString()
   saveProgress(progress)
 }

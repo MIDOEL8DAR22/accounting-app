@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Card, Button, Badge } from '../components/ui'
-import { askAccountant, INTERVIEW, gradeInterviewAnswer, type EntryReply } from '../lib/accountant'
+import { askAccountant, askLiveAI, INTERVIEW, gradeInterviewAnswer, type EntryReply, type ChatMsg } from '../lib/accountant'
+import { getProgress, setAiAssistant } from '../lib/progress'
 import { cn } from '../lib/cn'
 import {
   IconQuestion,
@@ -11,6 +12,7 @@ import {
   IconXCircle,
   IconLightbulb,
   IconCheck,
+  IconSpark,
 } from '../components/icons'
 
 interface Msg {
@@ -42,6 +44,8 @@ export function Accountant() {
   const [messages, setMessages] = useState<Msg[]>(initial)
   const [input, setInput] = useState('')
   const [interview, setInterview] = useState<InterviewState | null>(null)
+  const [aiOn, setAiOn] = useState(() => getProgress().aiAssistant !== false)
+  const [aiLoading, setAiLoading] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -50,7 +54,7 @@ export function Accountant() {
 
   const push = (m: Msg) => setMessages((prev) => [...prev, m])
 
-  const send = (raw: string) => {
+  const send = async (raw: string) => {
     const text = raw.trim()
     if (!text) return
     setInput('')
@@ -100,7 +104,32 @@ export function Accountant() {
     }
 
     const reply = askAccountant(text)
-    push({ id: Date.now(), role: 'bot', text: reply.text, entry: reply.entry })
+    if (reply.entry || !aiOn) {
+      push({ id: Date.now(), role: 'bot', text: reply.text, entry: reply.entry })
+      return
+    }
+
+    // no local answer → ask the live free AI
+    setAiLoading(true)
+    const controller = new AbortController()
+    const timer = window.setTimeout(() => controller.abort(), 60000)
+    const history: ChatMsg[] = messages
+      .filter((m) => m.text && m.id !== 0)
+      .slice(-10)
+      .map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }))
+    try {
+      const aiText = await askLiveAI([...history, { role: 'user', content: text }], controller.signal)
+      push({ id: Date.now(), role: 'bot', text: aiText })
+    } catch {
+      push({
+        id: Date.now(),
+        role: 'bot',
+        text: 'مع الأسف خدمة الذكاء الحي مش متاحة دلوقتي (نيّت مش وصل أو حد إستخدام). هنا ردّ من القواعد المحلية:\n\n' + reply.text,
+      })
+    } finally {
+      window.clearTimeout(timer)
+      setAiLoading(false)
+    }
   }
 
   return (
@@ -114,9 +143,28 @@ export function Accountant() {
             <h1 className="text-2xl font-extrabold text-slate-900">المحاسب الخبير</h1>
             <p className="text-sm text-slate-600">المحاسب عادل — خبرة 15 سنة في الشغل الحقيقي، اكتبله أي عملية أو اسأله سؤال</p>
           </div>
-          {interview?.active && (
-            <Badge color="green" className="mr-auto">مقابلة جارية</Badge>
-          )}
+          <div className="mr-auto flex items-center gap-2">
+            <button
+              onClick={() => {
+                const next = !aiOn
+                setAiOn(next)
+                setAiAssistant(next)
+              }}
+              title={aiOn ? 'الذكاء الحي شغال — إجابات برة القواعد بتيجي من خدمة مجانية خارجية' : 'الذكاء الحي مطفى — ردود من القواعد المحلية بس'}
+              className={cn(
+                'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors',
+                aiOn
+                  ? 'bg-violet-600 text-white border-violet-600 hover:bg-violet-700'
+                  : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
+              )}
+            >
+              <IconSpark size={13} />
+              الذكاء الحي: {aiOn ? 'شغال' : 'مطفى'}
+            </button>
+            {interview?.active && (
+              <Badge color="green">مقابلة جارية</Badge>
+            )}
+          </div>
         </div>
       </Card>
 
@@ -162,6 +210,14 @@ export function Accountant() {
               </div>
             </div>
           ))}
+          {aiLoading && (
+            <div className="flex justify-end">
+              <div className="max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed bg-white border border-slate-200 text-slate-500 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 flex items-center gap-2">
+                <IconSpark size={14} className="animate-spin" />
+                المحاسب بيفكر في الإجابة...
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="p-3 border-t border-slate-200 bg-white dark:bg-slate-900">
@@ -183,9 +239,10 @@ export function Accountant() {
               <IconArrowLeft size={18} />
             </Button>
           </div>
-          <div className="mt-2 flex items-center justify-between">
+          <div className="mt-2 flex items-center justify-between gap-2">
             <p className="text-[11px] text-slate-400 flex items-center gap-1">
               <IconLightbulb size={12} /> مثال: "بعت بضاعة 5,000 نقدًا" — هيقترحلك القيد فورًا
+              {aiOn && <> · الأسئلة من برة القواعد بتروح لخدمة مجانية عامة (Pollinations) — ممكن تطفّيها من الزرار فوق</>}
             </p>
             <Button variant="ghost" className="text-xs" onClick={() => { setMessages(initial); setInterview(null) }}>
               <IconRefresh size={13} /> مسح المحادثة

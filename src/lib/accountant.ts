@@ -203,3 +203,37 @@ export function gradeInterviewAnswer(answer: string, idx: number): boolean {
   const a = answer.replace(/[\u0660-\u0669]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
   return q.expected.some((w) => a.includes(w))
 }
+
+/* ---------- live free AI (Pollinations) with graceful offline fallback ---------- */
+
+export interface ChatMsg {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+const AI_ENDPOINT = 'https://text.pollinations.ai/openai'
+const AI_MODEL = 'openai'
+
+const SYSTEM_PROMPT =
+  `أنت "المحاسب عادل" — محاسب أستاذ مصري خبرة 15 سنة في المحاسبة العملية والمكاتب والضرائب في مصر.
+ردودك بالعربية المصرية، مختصرة وواضحة، وبدون رموز تعبيرية (Emoji).
+اساعد في: كتابة القيود المحاسبية، شرح الدورة المحاسبية (دفتر اليومية، الترحيل، ميزان المراجعة، التسويات، قائمة الدخل والميزانية)، بضاعة آخر المدة، الإهلاك، الخصم التجاري والنقدي، ضريبة القيمة المضافة 14%، الخصم الضريبي وطلب الأداء، والإجابة على أسئلة مقابلات المحاسبين.
+اكتب القيود في سطرين:
+من حـ (الحساب المدين) المبلغ
+إلى حـ (الحساب الدائن) المبلغ
+قدم نصائح عملية قصيرة من الواقع، ولو السؤال مش واضح اطلب التوضيح.`
+
+export async function askLiveAI(messages: ChatMsg[], signal?: AbortSignal): Promise<string> {
+  if (typeof fetch === 'undefined') throw new Error('web-unavailable')
+  const res = await fetch(AI_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: AI_MODEL, messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages] }),
+    signal,
+  })
+  if (!res.ok) throw new Error(`http-${res.status}`)
+  const data = await res.json()
+  const text = data?.choices?.[0]?.message?.content
+  if (typeof text !== 'string' || text.trim() === '') throw new Error('empty')
+  return text.trim()
+}
