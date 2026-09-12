@@ -39,15 +39,28 @@ export interface StepResult {
   assumptions?: string[]
 }
 
+export interface ExerciseEntrySide {
+  account: string
+  amount: string
+}
+
+export interface ExerciseEntry {
+  debit: ExerciseEntrySide
+  credit: ExerciseEntrySide
+  hint?: string
+}
+
 export interface Exercise {
   id: string
-  level: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G'
+  level: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K'
   difficulty: 1 | 2 | 3 | 4 | 5
   category: string
   question: string
+  kind?: 'mc' | 'text' | 'entry'
   options?: string[]
   correctIndex?: number
   correctAnswer?: string[]
+  entry?: ExerciseEntry
   explanation: string
   topic: string
 }

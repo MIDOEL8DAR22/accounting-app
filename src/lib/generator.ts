@@ -5,7 +5,7 @@ export interface GeneratorConfig {
   topic: string
   difficulty: number
   count: number
-  level: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'mixed'
+  level: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'mixed'
 }
 
 export interface GeneratedBatch {
