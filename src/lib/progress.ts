@@ -1,0 +1,175 @@
+const STORAGE_KEY = 'accounting-app-progress'
+
+export interface UserProgress {
+  completedStages: number[]
+  completedLessons: string[]
+  exercisesSolved: number
+  correctAnswers: number
+  wrongAnswers: number
+  currentStreak: number
+  bestStreak: number
+  totalPoints: number
+  quizScores: { quizId: string; score: number; total: number; date: string }[]
+  weakTopics: Record<string, number>
+  strongTopics: Record<string, number>
+  lastActivity: string
+  lastLessonId: string | null
+  currentStage: number
+  exerciseHistory: { exerciseId: string; correct: boolean; date: string }[]
+}
+
+const defaultProgress: UserProgress = {
+  completedStages: [],
+  completedLessons: [],
+  exercisesSolved: 0,
+  correctAnswers: 0,
+  wrongAnswers: 0,
+  currentStreak: 0,
+  bestStreak: 0,
+  totalPoints: 0,
+  quizScores: [],
+  weakTopics: {},
+  strongTopics: {},
+  lastActivity: '',
+  lastLessonId: null,
+  currentStage: 1,
+  exerciseHistory: [],
+}
+
+export function getProgress(): UserProgress {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return { ...defaultProgress }
+    return { ...defaultProgress, ...JSON.parse(raw) }
+  } catch {
+    return { ...defaultProgress }
+  }
+}
+
+export function saveProgress(p: UserProgress): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(p))
+}
+
+export function recordExercise(exerciseId: string, correct: boolean, topic: string): void {
+  const progress = getProgress()
+  const now = new Date().toISOString()
+
+  progress.exercisesSolved++
+  progress.lastActivity = now
+  progress.exerciseHistory.push({ exerciseId, correct, date: now })
+
+  if (correct) {
+    progress.correctAnswers++
+    progress.totalPoints += 10
+    progress.currentStreak++
+    progress.strongTopics[topic] = (progress.strongTopics[topic] || 0) + 1
+  } else {
+    progress.wrongAnswers++
+    progress.totalPoints += 2
+    progress.currentStreak = 0
+    progress.weakTopics[topic] = (progress.weakTopics[topic] || 0) + 1
+  }
+
+  if (progress.currentStreak > progress.bestStreak) {
+    progress.bestStreak = progress.currentStreak
+  }
+
+  saveProgress(progress)
+}
+
+export function recordQuiz(score: number, total: number): void {
+  const progress = getProgress()
+  const now = new Date().toISOString()
+
+  progress.quizScores.push({
+    quizId: `quiz-${Date.now()}`,
+    score,
+    total,
+    date: now,
+  })
+
+  progress.totalPoints += score * 5
+  progress.lastActivity = now
+
+  saveProgress(progress)
+}
+
+export function completeLesson(lessonId: string): void {
+  const progress = getProgress()
+
+  if (!progress.completedLessons.includes(lessonId)) {
+    progress.completedLessons.push(lessonId)
+  }
+
+  progress.lastLessonId = lessonId
+  progress.lastActivity = new Date().toISOString()
+
+  saveProgress(progress)
+}
+
+export function completeStage(stageId: number): void {
+  const progress = getProgress()
+
+  if (!progress.completedStages.includes(stageId)) {
+    progress.completedStages.push(stageId)
+  }
+
+  progress.lastActivity = new Date().toISOString()
+
+  saveProgress(progress)
+}
+
+export function getCurrentStage(): number {
+  const progress = getProgress()
+  if (progress.completedStages.length === 0) return 1
+  return Math.max(...progress.completedStages) + 1
+}
+
+export function getProgressPercentage(): number {
+    const progress = getProgress()
+    const totalStages = 6
+    const stagesFraction = progress.completedStages.length / totalStages
+    const exercisesFraction = progress.exercisesSolved > 0 ? 0.1 : 0
+    const total = Math.min((stagesFraction * 0.9 + exercisesFraction) * 100, 100)
+    return Math.round(total)
+  }
+
+export function resetProgress(): void {
+  localStorage.removeItem(STORAGE_KEY)
+}
+
+export function getWeakTopics(): string[] {
+  const progress = getProgress()
+  return Object.entries(progress.weakTopics)
+    .sort((a, b) => b[1] - a[1])
+    .map(([topic]) => topic)
+}
+
+export function getStats() {
+  const progress = getProgress()
+  const totalAnswered = progress.correctAnswers + progress.wrongAnswers
+
+  return {
+    completedStages: progress.completedStages.length,
+    completedLessons: progress.completedLessons.length,
+    exercisesSolved: progress.exercisesSolved,
+    correctAnswers: progress.correctAnswers,
+    wrongAnswers: progress.wrongAnswers,
+    accuracy: totalAnswered > 0 ? Math.round((progress.correctAnswers / totalAnswered) * 100) : 0,
+    currentStreak: progress.currentStreak,
+    bestStreak: progress.bestStreak,
+    totalPoints: progress.totalPoints,
+    totalQuizzes: progress.quizScores.length,
+    averageQuizScore:
+      progress.quizScores.length > 0
+        ? Math.round(
+            progress.quizScores.reduce((sum, q) => sum + (q.score / q.total) * 100, 0) /
+              progress.quizScores.length
+          )
+        : 0,
+    progressPercentage: getProgressPercentage(),
+    weakTopics: getWeakTopics(),
+    lastActivity: progress.lastActivity,
+    lastLessonId: progress.lastLessonId,
+  }
+}
