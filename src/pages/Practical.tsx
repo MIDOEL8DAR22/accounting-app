@@ -24,6 +24,8 @@ import {
   IconClipboard,
   IconRocket,
   IconSettings,
+  IconUpload,
+  IconCoins,
 } from '../components/icons'
 
 const SCENARIO_ICONS: Record<string, (size: number) => ReactNode> = {
@@ -33,6 +35,8 @@ const SCENARIO_ICONS: Record<string, (size: number) => ReactNode> = {
   'contracting-company': (s) => <IconLandmark size={s} />,
   'logistics-company': (s) => <IconRocket size={s} />,
   'garment-factory': (s) => <IconSettings size={s} />,
+  'import-export-co': (s) => <IconUpload size={s} />,
+  'restaurant-cafe': (s) => <IconCoins size={s} />,
 }
 
 interface RowFields {
