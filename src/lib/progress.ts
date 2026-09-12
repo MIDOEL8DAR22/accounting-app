@@ -1,4 +1,5 @@
 import { LESSONS } from '../data/stages'
+import { FLASHCARDS } from '../data/flashcards'
 
 const STORAGE_KEY = 'accounting-app-progress'
 const BACKUP_KEY = 'accounting-app-progress-bak'
@@ -27,6 +28,7 @@ export interface UserProgress {
   entriesBuilt: number
   dictionarySearches: number
   summaryViews: number
+  dailyCards: { date: string; cardId: number; known: boolean }[]
 }
 
 const defaultProgress: UserProgress = {
@@ -52,6 +54,7 @@ const defaultProgress: UserProgress = {
   entriesBuilt: 0,
   dictionarySearches: 0,
   summaryViews: 0,
+  dailyCards: [],
 }
 
 export function getProgress(): UserProgress {
@@ -166,6 +169,31 @@ export function recordFlashcard(known: boolean): void {
   }
   progress.lastActivity = new Date().toISOString()
   saveProgress(progress)
+}
+
+function todayKey(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+export function getDailyCard(): { cardId: number; known: boolean | null } {
+  const progress = getProgress()
+  const today = todayKey()
+  const todayEntry = progress.dailyCards.find((d) => d.date === today)
+  if (todayEntry) return { cardId: todayEntry.cardId, known: todayEntry.known }
+  const last = progress.dailyCards[progress.dailyCards.length - 1]
+  const nextId = last ? (last.cardId + 1) % FLASHCARDS.length : 0
+  return { cardId: nextId, known: null }
+}
+
+export function judgeDailyCard(known: boolean): void {
+  const progress = getProgress()
+  const today = todayKey()
+  if (progress.dailyCards.some((d) => d.date === today)) return
+  const { cardId } = getDailyCard()
+  progress.dailyCards.push({ date: today, cardId, known })
+  saveProgress(progress)
+  recordFlashcard(known)
 }
 
 export function recordEntry(): void {
