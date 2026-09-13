@@ -13,22 +13,16 @@ import {
   IconRefresh,
   IconArrowRight,
   IconSearch,
-  IconPen,
   IconSpark,
 } from '../components/icons'
 
-type QType = 'write' | 'letters' | 'complete'
 type Phase = 'idle' | 'run' | 'done'
 
-interface DrillItem {
+interface Step {
   term: VocabTerm
-  type: QType
-  letterTiles: string[]
-  masked: string
-  isPhrase: boolean
+  round: 0 | 1 | 2
 }
 
-const SESSION_SIZE = 8
 const MAX_HEARTS = 3
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -40,40 +34,6 @@ function shuffle<T>(arr: T[]): T[] {
     ;[a[i], a[j]] = [a[j], a[i]]
   }
   return a
-}
-
-function buildMasked(en: string): string {
-  return en
-    .split(' ')
-    .map((w) => {
-      const letters = w.replace(/[^a-z0-9]/gi, '')
-      if (letters.length < 3) return w
-      const hide = letters.length >= 6 ? 2 : 1
-      const picks = new Set<number>()
-      let guard = 0
-      while (picks.size < hide && guard < 30) {
-        const r = 1 + Math.floor(Math.random() * (w.length - 2))
-        if (/[a-z0-9]/i.test(w[r])) picks.add(r)
-        guard++
-      }
-      const out = w.split('')
-      picks.forEach((r) => {
-        out[r] = '＿'
-      })
-      return out.join('')
-    })
-    .join(' ')
-}
-
-function makeDrill(term: VocabTerm): DrillItem {
-  const isPhrase = term.en.includes(' ')
-  const choices: QType[] = ['write', 'complete']
-  if (!isPhrase || term.en.split(' ').length <= 3) choices.push('letters')
-  const type = choices[Math.floor(Math.random() * choices.length)]
-  const letterTiles = isPhrase
-    ? shuffle(term.en.split(' '))
-    : shuffle(term.en.replace(/[^a-z0-9]/gi, '').split(''))
-  return { term, type, letterTiles, masked: buildMasked(term.en), isPhrase }
 }
 
 let voiceCache: SpeechSynthesisVoice | null | undefined
@@ -108,16 +68,9 @@ function speak(text: string, slow: boolean) {
   synth.speak(u)
 }
 
-const TYPE_LABEL: Record<QType, string> = {
-  write: 'اكتب المصطلح بالإنجليزي',
-  letters: 'رتّب الحروف / الكلمات صح',
-  complete: 'كمّل الكلمة الناقصة',
-}
-
 export function EnglishPractice() {
   const [phase, setPhase] = useState<Phase>('idle')
-  const [drill, setDrill] = useState<DrillItem[]>([])
-  const [index, setIndex] = useState(0)
+  const [stepIndex, setStepIndex] = useState(0)
   const [hearts, setHearts] = useState(MAX_HEARTS)
   const [correct, setCorrect] = useState(0)
   const [answered, setAnswered] = useState(false)
@@ -145,26 +98,33 @@ export function EnglishPractice() {
     }
   }, [])
 
-  const current = drill[index] ?? null
-
-  const canSubmit = useMemo(() => {
-    if (!current || answered) return false
-    if (current.type === 'letters') return picked.length > 0
-    return input.trim().length > 0
-  }, [current, answered, picked, input])
-
-  const builtAnswer = useMemo(() => {
-    if (!current) return ''
-    if (current.type === 'letters') {
-      return current.isPhrase ? picked.join(' ') : picked.join('')
+  const steps = useMemo<Step[]>(() => {
+    const s: Step[] = []
+    for (const t of ACCOUNTING_ENGLISH) {
+      for (let r = 0; r < 3; r++) s.push({ term: t, round: r as 0 | 1 | 2 })
     }
-    return input
-  }, [current, picked, input])
+    return s
+  }, [])
+
+  const current = steps[stepIndex]
+  const isPhrase = (t: VocabTerm) => t.en.includes(' ')
+  const letterTiles = useMemo<string[]>(() => {
+    if (!current || current.round !== 1) return []
+    return isPhrase(current.term)
+      ? shuffle(current.term.en.split(' '))
+      : shuffle(current.term.en.replace(/[^a-z0-9]/gi, '').split(''))
+  }, [current])
+
+  useEffect(() => {
+    if (phase !== 'run' || !current) return
+    if (current.round === 0) {
+      const timer = setTimeout(() => speak(current.term.en, false), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [phase, current])
 
   const startSession = () => {
-    const items = shuffle(ACCOUNTING_ENGLISH).slice(0, SESSION_SIZE).map(makeDrill)
-    setDrill(items)
-    setIndex(0)
+    setStepIndex(0)
     setHearts(MAX_HEARTS)
     setCorrect(0)
     setAnswered(false)
@@ -173,6 +133,18 @@ export function EnglishPractice() {
     setPicked([])
     setPhase('run')
   }
+
+  const canSubmit = useMemo(() => {
+    if (!current || current.round === 0 || answered) return false
+    if (current.round === 1) return picked.length > 0
+    return input.trim().length > 0
+  }, [current, answered, picked, input])
+
+  const builtAnswer = useMemo(() => {
+    if (!current) return ''
+    if (current.round === 1) return isPhrase(current.term) ? picked.join(' ') : picked.join('')
+    return input
+  }, [current, picked, input])
 
   const pickTile = (tile: string) => {
     if (answered) return
@@ -191,19 +163,15 @@ export function EnglishPractice() {
     setOk(match)
     if (match) setCorrect((c) => c + 1)
     else setHearts((h) => h - 1)
-    recordExercise(`en-${current.term.id}`, match, 'إنجليزي محاسبي')
+    recordExercise(current.round === 1 ? `en-l-${current.term.id}` : `en-w-${current.term.id}`, match, 'إنجليزي محاسبي')
   }
 
-  const nextQuestion = () => {
-    if (hearts <= 0) {
+  const nextStep = () => {
+    if (hearts <= 0 || stepIndex >= steps.length - 1) {
       setPhase('done')
       return
     }
-    if (index >= drill.length - 1) {
-      setPhase('done')
-      return
-    }
-    setIndex((i) => i + 1)
+    setStepIndex((i) => i + 1)
     setAnswered(false)
     setOk(null)
     setInput('')
@@ -228,12 +196,15 @@ export function EnglishPractice() {
     />
   )
 
+  const challengeRounds = 2
+  const totalScore = ACCOUNTING_ENGLISH.length * challengeRounds
+
   return (
     <div className="space-y-4">
       <div className="text-center space-y-1 py-1">
         <h1 className="text-2xl font-extrabold">تعلم الإنجليزي المحاسبي</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          {ACCOUNTING_ENGLISH.length} مصطلح محاسبي بالإنجليزي — اكتب، رتّب، وكمّل بنفس أسلوب Duolingo
+          {ACCOUNTING_ENGLISH.length} مصطلح محاسبي — كل كلمة بتمر بـ 3 مراحل بالترتيب
         </p>
       </div>
 
@@ -241,7 +212,7 @@ export function EnglishPractice() {
         <Card className="p-4">
           <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
             <IconSpeaker size={16} />
-            النطق شغال: اسمع الكلمة بمعدل عادي أو بطيء
+            النطق شغال: في المرحلة الأولى الكلمة بتتنطق لوحدها، وساعات في أي وقت عادي أو بطيء
             <button
               onClick={() => speak('accounting accounting', true)}
               className="text-xs font-bold text-blue-600 dark:text-blue-400 underline"
@@ -259,149 +230,183 @@ export function EnglishPractice() {
               <IconSpeaker size={28} />
             </div>
             <div className="space-y-1">
-              <h2 className="text-lg font-extrabold">جولة تدريبية</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                كل جولة {SESSION_SIZE} كلمات عشوائية بثلاثة أنواع: اكتب، رتّب الحروف، كمل الكلمة. عندك {MAX_HEARTS} أرواح.
+              <h2 className="text-lg font-extrabold">إزاي بتيجي الجولة؟</h2>
+              <p className="max-w-lg text-sm text-slate-500 dark:text-slate-400">
+                الكلمات جاية بالترتيب (من 1 لـ {ACCOUNTING_ENGLISH.length}). كل كلمة بتعدي على 3 مراحل:
               </p>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {(['write', 'letters', 'complete'] as QType[]).map((t) => (
-                <Badge key={t} color="green">
-                  {t === 'write' && <IconPen size={12} />}
-                  {t === 'letters' && <span className="font-mono">A–Z</span>}
-                  {t === 'complete' && <span className="font-mono">＿＿</span>}
-                  {TYPE_LABEL[t]}
-                </Badge>
-              ))}
+            <div className="grid w-full max-w-md gap-2 text-right">
+              <div className="flex items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-3 dark:border-blue-500/20 dark:bg-blue-500/10">
+                <Badge color="blue">1</Badge>
+                <div className="text-sm">
+                  <div className="font-bold">اسمع النطق</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">الكلمة بتتكتب عادي وتتنطق لوحدها — بس اسمع وخلاص</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                <Badge color="green">2</Badge>
+                <div className="text-sm">
+                  <div className="font-bold">رتّب الحروف</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">المعنى بالعربي وتجمع الحروف (أو الكلمات) من الاختيارات</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/20 dark:bg-amber-500/10">
+                <Badge color="amber">3</Badge>
+                <div className="text-sm">
+                  <div className="font-bold">اكتب بالإنجليزي</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">المعنى بالعربي وتكتب المصطلح بالإنجليزي من حفظك</div>
+                </div>
+              </div>
+            </div>
+            <div className="text-xs text-slate-400 dark:text-slate-500">
+              عندك {MAX_HEARTS} أرواح — أي غلط في مرحلة الحروف أو الكتابة بيخسر قلب
             </div>
             <Button onClick={startSession} className="px-6">
               <IconPlay size={16} />
-              ابدأ الجولة
+              ابدأ من أول كلمة
             </Button>
           </div>
         )}
 
         {phase === 'run' && current && (
           <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                  {index + 1} / {drill.length}
-                </span>
-                <span className="flex items-center gap-1.5">{heartsDot(0)}{heartsDot(1)}{heartsDot(2)}</span>
-              </div>
-              <ProgressBar value={((index + (answered ? 1 : 0)) / drill.length) * 100} />
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                كلمة {steps.indexOf(current) / 3 + 1} من {ACCOUNTING_ENGLISH.length} · المرحلة {current.round + 1} / 3
+              </span>
+              <span className="flex items-center gap-1.5">{heartsDot(0)}{heartsDot(1)}{heartsDot(2)}</span>
             </div>
+            <ProgressBar value={(stepIndex / steps.length) * 100} />
 
             <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/50">
-              <div className="text-center space-y-2">
-                <div className="text-2xl font-extrabold">{current.term.ar}</div>
-                <Badge color="blue">{TYPE_LABEL[current.type]}</Badge>
-                {current.type === 'complete' && (
-                  <div
-                    dir="ltr"
-                    className="pt-1 font-mono text-lg tracking-[0.2em] text-emerald-600 dark:text-emerald-400"
-                  >
-                    {current.masked}
+              {current.round === 0 ? (
+                <div className="space-y-4 py-2 text-center">
+                  <Badge color="blue">1) اسمع النطق</Badge>
+                  <div dir="ltr" className="pt-2 font-mono text-3xl font-extrabold tracking-wide text-slate-800 dark:text-slate-100">
+                    {current.term.en}
                   </div>
-                )}
-              </div>
-
-              <div className="flex items-center justify-center gap-2">
-                <Button variant="secondary" className="px-3 py-2 text-xs" onClick={() => speak(current.term.en, false)}>
-                  <IconSpeaker size={14} />
-                  عادي
-                </Button>
-                <Button variant="secondary" className="px-3 py-2 text-xs" onClick={() => speak(current.term.en, true)}>
-                  <IconSpeaker size={14} />
-                  بطيء
-                </Button>
-              </div>
-
-              {current.type === 'letters' ? (
-                <div className="space-y-3">
-                  {picked.length > 0 && (
-                    <div
-                      dir="ltr"
-                      className="flex flex-wrap items-center justify-center gap-1 rounded-xl border-2 border-dashed border-slate-300 bg-white p-3 font-mono text-lg font-bold dark:border-slate-600 dark:bg-slate-800"
-                    >
-                      {picked.join(current.isPhrase ? '  ' : '')}
-                    </div>
-                  )}
-                  {picked.length === 0 && (
-                    <div className="rounded-xl border-2 border-dashed border-slate-300 p-3 text-center text-sm text-slate-400 dark:border-slate-600">
-                      دوس على الحروف تحتها بالترتيب الصحيح
-                    </div>
-                  )}
-                  <div dir="ltr" className="flex flex-wrap justify-center gap-1.5">
-                    {current.letterTiles.map((tile, ti) => (
-                      <button
-                        key={`${tile}-${ti}`}
-                        onClick={() => pickTile(tile)}
-                        className="flex h-11 items-center justify-center rounded-lg border-2 border-slate-200 bg-white px-2.5 font-mono text-base font-bold text-slate-700 shadow-sm transition-colors hover:border-emerald-400 hover:text-emerald-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-                      >
-                        {tile}
-                      </button>
-                    ))}
-                  </div>
+                  <div className="text-base text-slate-500 dark:text-slate-400">{current.term.ar}</div>
                   <div className="flex items-center justify-center gap-2">
-                    {picked.length > 0 && (
-                      <Button variant="ghost" className="px-3 py-2 text-xs" onClick={undoPick}>
-                        مسح آخر
-                      </Button>
-                    )}
+                    <Button variant="secondary" className="px-3 py-2 text-xs" onClick={() => speak(current.term.en, false)}>
+                      <IconSpeaker size={14} />
+                      عادي
+                    </Button>
+                    <Button variant="secondary" className="px-3 py-2 text-xs" onClick={() => speak(current.term.en, true)}>
+                      <IconSpeaker size={14} />
+                      بطيء
+                    </Button>
                   </div>
+                  <div className="text-xs text-slate-400 dark:text-slate-500">اسمع كويس النطق وتابع</div>
+                  <Button onClick={nextStep}>
+                    متابعة
+                    <IconArrowRight size={16} />
+                  </Button>
                 </div>
               ) : (
-                <div dir="ltr" className="mx-auto max-w-md text-center">
-                  <input
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') submit()
-                    }}
-                    dir="ltr"
-                    placeholder={current.type === 'complete' ? 'اكتب الكلمة كاملة...' : 'Type the English term...'}
-                    className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-center font-mono text-lg outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800"
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-center gap-2">
-              {!answered && (
-                <Button onClick={submit} disabled={!canSubmit} className="min-w-36">
-                  <IconCheck size={16} />
-                  اتأكد
-                </Button>
-              )}
-              {answered && (
                 <>
-                  {ok ? (
-                    <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-                      <IconCheckCircle size={16} />
-                      صحيح! أحسنت
+                  <div className="text-center space-y-2">
+                    <div className="text-2xl font-extrabold">{current.term.ar}</div>
+                    <Badge color={current.round === 1 ? 'green' : 'amber'}>
+                      {current.round === 1 ? '2) رتّب الحروف / الكلمات صح' : '3) اكتب المصطلح بالإنجليزي'}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-center gap-2">
+                    <Button variant="secondary" className="px-3 py-2 text-xs" onClick={() => speak(current.term.en, false)}>
+                      <IconSpeaker size={14} />
+                      عادي
+                    </Button>
+                    <Button variant="secondary" className="px-3 py-2 text-xs" onClick={() => speak(current.term.en, true)}>
+                      <IconSpeaker size={14} />
+                      بطيء
+                    </Button>
+                  </div>
+
+                  {current.round === 1 ? (
+                    <div className="space-y-3">
+                      {picked.length > 0 && (
+                        <div
+                          dir="ltr"
+                          className="flex flex-wrap items-center justify-center gap-1 rounded-xl border-2 border-dashed border-slate-300 bg-white p-3 font-mono text-lg font-bold dark:border-slate-600 dark:bg-slate-800"
+                        >
+                          {picked.join(isPhrase(current.term) ? '  ' : '')}
+                        </div>
+                      )}
+                      {picked.length === 0 && (
+                        <div className="rounded-xl border-2 border-dashed border-slate-300 p-3 text-center text-sm text-slate-400 dark:border-slate-600">
+                          دوس على الحروف تحتها بالترتيب الصحيح
+                        </div>
+                      )}
+                      <div dir="ltr" className="flex flex-wrap justify-center gap-1.5">
+                        {letterTiles.map((tile, ti) => (
+                          <button
+                            key={`${tile}-${ti}`}
+                            onClick={() => pickTile(tile)}
+                            className="flex h-11 items-center justify-center rounded-lg border-2 border-slate-200 bg-white px-2.5 font-mono text-base font-bold text-slate-700 shadow-sm transition-colors hover:border-emerald-400 hover:text-emerald-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                          >
+                            {tile}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-center gap-2">
+                        {picked.length > 0 && (
+                          <Button variant="ghost" className="px-3 py-2 text-xs" onClick={undoPick}>
+                            مسح آخر
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ) : (
-                    <div className="rounded-xl bg-red-50 px-4 py-2 text-red-700 dark:bg-red-500/10 dark:text-red-300">
-                      <div className="flex items-center gap-2">
-                        <IconXCircle size={16} />
-                        اجابة صحيحة هي:
-                      </div>
-                      <div dir="ltr" className="pt-1 font-mono font-bold">{current.term.en}</div>
-                      <div className="text-xs opacity-80">{current.term.ar}</div>
+                    <div dir="ltr" className="mx-auto max-w-md text-center">
+                      <input
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') submit()
+                        }}
+                        dir="ltr"
+                        placeholder="اكتب المصطلح بالإنجليزي..."
+                        className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-center font-mono text-lg outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800"
+                      />
                     </div>
                   )}
                 </>
               )}
             </div>
 
-            {answered && (
-              <div className="text-center">
-                <Button variant={ok ? 'success' : 'primary'} onClick={nextQuestion}>
-                  {index >= drill.length - 1 || hearts <= 0 ? 'شوف النتيجة' : 'التالي'}
-                  <IconArrowRight size={16} />
-                </Button>
+            {current.round !== 0 && (
+              <div className="flex items-center justify-center gap-2">
+                {!answered && (
+                  <Button onClick={submit} disabled={!canSubmit} className="min-w-36">
+                    <IconCheck size={16} />
+                    اتأكد
+                  </Button>
+                )}
+                {answered && (
+                  <>
+                    {ok ? (
+                      <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                        <IconCheckCircle size={16} />
+                        صحيح! أحسنت
+                      </div>
+                    ) : (
+                      <div className="rounded-xl bg-red-50 px-4 py-2 text-red-700 dark:bg-red-500/10 dark:text-red-300">
+                        <div className="flex items-center gap-2">
+                          <IconXCircle size={16} />
+                          الإجابة الصحيحة:
+                        </div>
+                        <div dir="ltr" className="pt-1 font-mono font-bold">{current.term.en}</div>
+                        <div className="text-xs opacity-80">{current.term.ar}</div>
+                      </div>
+                    )}
+                  </>
+                )}
+                {answered && (
+                  <Button variant={ok ? 'success' : 'primary'} onClick={nextStep}>
+                    {hearts <= 0 || stepIndex >= steps.length - 1 ? 'شوف النتيجة' : 'الكلمة الجاية'}
+                    <IconArrowRight size={16} />
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -409,28 +414,25 @@ export function EnglishPractice() {
 
         {phase === 'done' && (
           <div className="flex flex-col items-center gap-4 py-4 text-center">
-            <div
-              className={cn(
-                'flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-md',
-                'bg-green-500',
-              )}
-            >
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-500 text-white shadow-md">
               <IconSpark size={28} />
             </div>
             <div className="space-y-1">
-              <h2 className="text-lg font-extrabold">خلصت الجولة</h2>
+              <h2 className="text-lg font-extrabold">
+                {hearts <= 0 ? 'خلصت الأرواح' : 'خلصت كل الكلمات!'}
+              </h2>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                أجبت صح على {correct} من {drill.length} والأرواح المتبقية {hearts}
+                عدّيت على {ACCOUNTING_ENGLISH.length} كلمة · صحِّحت {correct} من {totalScore} مرحلة تحدّي
               </p>
             </div>
-            <ProgressBar value={(correct / drill.length) * 100} className="max-w-xs" />
+            <ProgressBar value={(correct / totalScore) * 100} className="max-w-xs" />
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => setPhase('idle')}>
                 رجوع
               </Button>
               <Button onClick={startSession}>
                 <IconRefresh size={16} />
-                جولة تانية
+                ابدأ من الأول
               </Button>
             </div>
           </div>
@@ -455,11 +457,14 @@ export function EnglishPractice() {
         <div className="max-h-96 divide-y divide-slate-100 overflow-y-auto dark:divide-slate-800">
           {filtered.map((t) => (
             <div key={t.id} className="flex items-center justify-between gap-2 py-2">
-              <div className="min-w-0">
-                <div dir="ltr" className="truncate text-right font-mono text-sm font-bold text-slate-700 dark:text-slate-200">
-                  {t.en}
+              <div className="flex items-center gap-2">
+                <span className="w-8 shrink-0 text-center text-xs font-bold text-slate-400">{t.id}</span>
+                <div className="min-w-0">
+                  <div dir="ltr" className="truncate text-right font-mono text-sm font-bold text-slate-700 dark:text-slate-200">
+                    {t.en}
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{t.ar}</div>
                 </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">{t.ar}</div>
               </div>
               <div className="flex items-center gap-1">
                 <button
