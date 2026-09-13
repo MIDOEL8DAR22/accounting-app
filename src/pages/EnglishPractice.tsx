@@ -314,7 +314,7 @@ export function EnglishPractice() {
       <div className="text-center space-y-1 py-1">
         <h1 className="text-2xl font-extrabold">تعلم الإنجليزي المحاسبي</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          {ACCOUNTING_ENGLISH.length} مصطلح محاسبي — نظام تكرار متباعد زي Memrise و Anki
+          نظام تكرار متباعد زي Memrise و Anki — كل كلمة هتظهر هنا لما تنجح فيها
         </p>
       </div>
 
@@ -325,7 +325,7 @@ export function EnglishPractice() {
               icon={<IconSpark size={22} />}
               label="كلمات بدأتها"
               value={cards.length}
-              sub={`من ${ACCOUNTING_ENGLISH.length} مصطلح`}
+              sub={cards.length > 0 ? 'تمام — كمّل عليهم' : 'ابدأ بأي كلمة جديدة'}
               color="blue"
             />
             <StatCard
@@ -375,7 +375,7 @@ export function EnglishPractice() {
             <div className="flex items-center justify-between pb-3">
               <h2 className="text-base font-extrabold">حديقة كلماتك</h2>
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                أتقنت {mastered.length} من {ACCOUNTING_ENGLISH.length}
+                أتقنت {mastered.length} مصطلح
               </span>
               <button
                 onClick={() => {
