@@ -303,11 +303,10 @@ export function EnglishPractice() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return ACCOUNTING_ENGLISH
-    return ACCOUNTING_ENGLISH.filter(
-      (t) => t.en.toLowerCase().includes(q) || t.ar.includes(q),
-    )
-  }, [query])
+    const pool = mastered.map((m) => m.t)
+    if (!q) return pool
+    return pool.filter((t) => t.en.toLowerCase().includes(q) || t.ar.includes(q))
+  }, [query, mastered])
 
   return (
     <div className="space-y-4">
@@ -695,7 +694,7 @@ export function EnglishPractice() {
 
       <Card className="p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-2 pb-3">
-          <h2 className="text-base font-extrabold">كل المصطلحات ({filtered.length})</h2>
+          <h2 className="text-base font-extrabold">كلماتك المحفوظة ({filtered.length})</h2>
           <div className="relative">
             <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
               <IconSearch size={14} />
@@ -747,7 +746,11 @@ export function EnglishPractice() {
             )
           })}
           {filtered.length === 0 && (
-            <div className="py-6 text-center text-sm text-slate-400">مفيش نتائج للبحث</div>
+            <div className="py-6 text-center text-sm text-slate-400">
+              {mastered.length === 0
+                ? 'لسه مفيش كلمات محفوظة — كمّل التدريب وهتلاقيها هنا'
+                : 'مفيش نتائج لبحثك'}
+            </div>
           )}
         </div>
       </Card>
