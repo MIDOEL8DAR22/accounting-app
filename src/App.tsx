@@ -20,6 +20,7 @@ const Builder = lazy(() => import('./pages/Builder').then(m => ({ default: m.Bui
 const Summary = lazy(() => import('./pages/Summary').then(m => ({ default: m.SummaryPage })))
 const Practical = lazy(() => import('./pages/Practical').then(m => ({ default: m.Practical })))
 const Accountant = lazy(() => import('./pages/Accountant').then(m => ({ default: m.Accountant })))
+const EnglishPractice = lazy(() => import('./pages/EnglishPractice').then(m => ({ default: m.EnglishPractice })))
 
 function Loader() {
   return (
@@ -54,6 +55,7 @@ export default function App() {
               <Route path="/summary" element={<Summary />} />
               <Route path="/practical" element={<Practical />} />
               <Route path="/accountant" element={<Accountant />} />
+              <Route path="/english" element={<EnglishPractice />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/builder" element={<Builder />} />
               <Route path="*" element={<Dashboard />} />

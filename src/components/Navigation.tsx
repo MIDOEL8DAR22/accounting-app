@@ -23,6 +23,7 @@ import {
   IconDown,
   IconBriefcase,
   IconQuestion,
+  IconSpeaker,
 } from './icons'
 
 const MAIN_ITEMS: { to: string; label: string; icon: ReactNode }[] = [
@@ -37,6 +38,7 @@ const TOOL_ITEMS: { to: string; label: string; icon: ReactNode }[] = [
   { to: '/accountant', label: 'المحاسب الخبير', icon: <IconQuestion size={17} /> },
   { to: '/practical', label: 'التطبيق العملي', icon: <IconBriefcase size={17} /> },
   { to: '/account-types', label: 'أنواع الحسابات', icon: <IconTag size={17} /> },
+  { to: '/english', label: 'إنجليزي محاسبي', icon: <IconSpeaker size={17} /> },
   { to: '/solver', label: 'حل أي سؤال', icon: <IconBrain size={17} /> },
   { to: '/builder', label: 'منشئ القيد', icon: <IconNotebook size={17} /> },
   { to: '/dictionary', label: 'قاموس الحسابات', icon: <IconSearch size={17} /> },
