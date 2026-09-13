@@ -212,6 +212,15 @@ export function EnglishPractice() {
     setPicked((p) => p.slice(0, -1))
   }
 
+  const availableTiles = useMemo(() => {
+    const remaining = [...letters]
+    picked.forEach((l) => {
+      const idx = remaining.indexOf(l)
+      if (idx >= 0) remaining.splice(idx, 1)
+    })
+    return remaining
+  }, [letters, picked])
+
   const builtAnswer = (term: VocabTerm) => (round === 1 ? picked.join(isPhrase(term) ? ' ' : '') : input)
 
   const canSubmitNew = useMemo(() => {
@@ -461,7 +470,7 @@ export function EnglishPractice() {
                         </div>
                       )}
                       <div dir="ltr" className="flex flex-wrap justify-center gap-1.5">
-                        {letters.map((tile, ti) => (
+                        {availableTiles.map((tile, ti) => (
                           <button
                             key={`${tile}-${ti}`}
                             onClick={() => pickTile(tile)}
