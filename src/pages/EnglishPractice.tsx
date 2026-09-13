@@ -396,7 +396,7 @@ export function EnglishPractice() {
               <div className="flex items-start gap-2">
                 <IconXCircle size={16} className="mt-0.5 shrink-0 text-rose-500" />
                 <span>
-                  <b className="text-slate-700 dark:text-slate-200">قاعدة التقدّم:</b> ما تنتقلش للكلمة اللي بعدها غير لما تجاوب صح في مرحلة الحروف ومرحلة الكتابة — المحاولة بتتكرر لحد النجاح. وكل كلمة ليها أيقونة متحركة خاصة بيها.
+                  <b className="text-slate-700 dark:text-slate-200">قاعدة التقدّم:</b> ما تنتقلش للكلمة اللي بعدها غير لما تجاوب صح في مرحلة الحروف ومرحلة الكتابة — المحاولة بتتكرر لحد النجاح. وكل كلمة ليها صورة حقيقية خاصة بيها.
                 </span>
               </div>
               <div className="flex items-start gap-2">
