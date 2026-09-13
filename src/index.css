@@ -71,3 +71,11 @@ html {
 .animate-pop {
   animation: pop 0.2s ease-out;
 }
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-float {
+  animation: floaty 2.6s ease-in-out infinite;
+}

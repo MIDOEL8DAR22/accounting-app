@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Card, Button, Badge, ProgressBar, StatCard } from '../components/ui'
 import { ACCOUNTING_ENGLISH } from '../data/accountingEnglish'
 import type { VocabTerm } from '../data/accountingEnglish'
+import { WordArt } from '../data/englishVisuals'
 import { recordExercise } from '../lib/progress'
 import {
   getCards,
@@ -202,6 +203,15 @@ export function EnglishPractice() {
     if (next) setLetters(makeLetters(next))
   }
 
+  const retryRound = () => {
+    if (!currentNew) return
+    setAnswered(false)
+    setOk(null)
+    setInput('')
+    setPicked([])
+    if (round === 1) setLetters(makeLetters(currentNew))
+  }
+
   const pickTile = (tile: string) => {
     if (answered) return
     setPicked((p) => [...p, tile])
@@ -382,16 +392,25 @@ export function EnglishPractice() {
           </Card>
 
           <Card className="p-4">
-            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-              <IconSpeaker size={16} />
-              <span className="font-bold">إزاي بيرشّح النظام؟</span>
-              التكرار المتباعد: كل مرة تتذكر الكلمة صح، موعد المراجعة الجايّه بيتبعد (١٠ د → يوم → ٣ أيام → أسبوع → أسبوعين...). الكلمة اللي تنسيها بترجعلك بسرعة.
-              <button
-                onClick={() => speak('accounting accounting', true)}
-                className="text-xs font-bold text-blue-600 dark:text-blue-400 underline"
-              >
-                جرّب النطق
-              </button>
+            <div className="space-y-2 text-sm text-slate-500 dark:text-slate-400">
+              <div className="flex items-start gap-2">
+                <IconXCircle size={16} className="mt-0.5 shrink-0 text-rose-500" />
+                <span>
+                  <b className="text-slate-700 dark:text-slate-200">قاعدة التقدّم:</b> ما تنتقلش للكلمة اللي بعدها غير لما تجاوب صح في مرحلة الحروف ومرحلة الكتابة — المحاولة بتتكرر لحد النجاح. وكل كلمة ليها أيقونة متحركة خاصة بيها.
+                </span>
+              </div>
+              <div className="flex items-start gap-2">
+                <IconSpeaker size={16} className="mt-0.5 shrink-0" />
+                <span>
+                  <b className="text-slate-700 dark:text-slate-200">النظام:</b> التكرار المتباعد — كل مرة تتذكر الكلمة صح، موعد المراجعة الجاية بيتبعد (١٠ د → يوم → ٣ أيام → أسبوع...). اللي تنساه بيمرجعلك بسرعة.
+                  <button
+                    onClick={() => speak('accounting accounting', true)}
+                    className="mr-2 text-xs font-bold text-blue-600 dark:text-blue-400 underline"
+                  >
+                    جرّب النطق
+                  </button>
+                </span>
+              </div>
             </div>
           </Card>
         </>
@@ -413,6 +432,7 @@ export function EnglishPractice() {
             <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/50">
               {round === 0 ? (
                 <div className="space-y-4 py-2 text-center">
+                  <WordArt term={currentNew} />
                   <Badge color="blue">1) اسمع النطق</Badge>
                   <div dir="ltr" className="pt-2 font-mono text-3xl font-extrabold tracking-wide text-slate-800 dark:text-slate-100">
                     {currentNew.en}
@@ -436,7 +456,8 @@ export function EnglishPractice() {
                 </div>
               ) : (
                 <>
-                  <div className="text-center space-y-2">
+                  <div className="space-y-2 text-center">
+                    <div className="flex justify-center"><WordArt term={currentNew} size="sm" /></div>
                     <div className="text-2xl font-extrabold">{currentNew.ar}</div>
                     <Badge color={round === 1 ? 'green' : 'amber'}>
                       {round === 1 ? '2) رتّب الحروف / الكلمات صح' : '3) اكتب المصطلح بالإنجليزي'}
@@ -515,22 +536,30 @@ export function EnglishPractice() {
                   </Button>
                 )}
                 {answered && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center justify-center gap-2">
                     {ok ? (
-                      <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-                        <IconCheckCircle size={16} />
-                        صحيح!
-                      </div>
+                      <>
+                        <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                          <IconCheckCircle size={16} />
+                          صحيح!
+                        </div>
+                        <Button variant="primary" onClick={nextRound}>
+                          {round >= 2 ? 'الكلمة الجاية' : 'التالية'}
+                          <IconArrowRight size={16} />
+                        </Button>
+                      </>
                     ) : (
-                      <div className="flex items-center gap-2 rounded-xl bg-rose-50 px-4 py-2 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
-                        <IconXCircle size={16} />
-                        الإجابة الصحيحة: {currentNew.en}
-                      </div>
+                      <>
+                        <div className="flex items-center gap-2 rounded-xl bg-rose-50 px-4 py-2 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
+                          <IconXCircle size={16} />
+                          الإجابة الصحيحة: <span className="font-mono font-bold">{currentNew.en}</span>
+                        </div>
+                        <Button variant="warning" onClick={retryRound}>
+                          <IconRefresh size={16} />
+                          أعيد المحاولة
+                        </Button>
+                      </>
                     )}
-                    <Button variant="primary" onClick={nextRound}>
-                      {round >= 2 ? 'الكلمة الجاية' : 'التالية'}
-                      <IconArrowRight size={16} />
-                    </Button>
                   </div>
                 )}
               </div>
@@ -553,6 +582,7 @@ export function EnglishPractice() {
             <ProgressBar value={(rIdx / revCards.length) * 100} />
 
             <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-900/50">
+              <div className="flex justify-center"><WordArt term={currentRevTerm} size="sm" /></div>
               <div className="text-2xl font-extrabold">{currentRevTerm.ar}</div>
               <Badge color="amber">اكتب المصطلح بالإنجليزي</Badge>
 
