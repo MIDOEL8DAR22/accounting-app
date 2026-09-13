@@ -14,6 +14,10 @@ import {
   updateCard,
   resetCards,
   cardByLevel,
+  markPracticeToday,
+  markWordPracticed,
+  getStreak,
+  wordsPracticedToday,
   MAX_LEVEL,
   LEVEL_LABEL,
 } from '../lib/englishSrs'
@@ -136,6 +140,16 @@ export function EnglishPractice() {
   const cards = useMemo(() => shuffle(getCards()), [tick])
   const due = useMemo(() => dueCount(), [tick])
   const pendingNew = useMemo(() => getNewWords().length, [tick])
+  const streak = useMemo(() => getStreak(), [tick])
+  const todayWords = useMemo(() => wordsPracticedToday(), [tick])
+  const mastered = useMemo(
+    () =>
+      getCards()
+        .filter((c) => c.level >= 1)
+        .sort((a, b) => a.id - b.id)
+        .map((card) => ({ card, t: ACCOUNTING_ENGLISH.find((t) => t.id === card.id)! })),
+    [tick],
+  )
 
   const currentNew = newWords[nIdx]
   const currentRev = revCards[rIdx]
@@ -270,6 +284,8 @@ export function EnglishPractice() {
     if (!currentRev) return
     const updated = recall(currentRev, rating)
     updateCard(updated)
+    markPracticeToday()
+    markWordPracticed(currentRev.id)
     refresh()
     if (rIdx >= revCards.length - 1) {
       setPhase('home')
@@ -304,7 +320,7 @@ export function EnglishPractice() {
 
       {phase === 'home' && (
         <>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <StatCard
               icon={<IconSpark size={22} />}
               label="كلمات بدأتها"
@@ -325,6 +341,13 @@ export function EnglishPractice() {
               value={cardByLevel()[MAX_LEVEL] || 0}
               sub="وصلت لمستوى الزهرة الناضجة"
               color="green"
+            />
+            <StatCard
+              icon={<span className="text-lg">🔥</span>}
+              label="أيام متواصلة"
+              value={streak}
+              sub={todayWords > 0 ? `النهاردة كمّلت ${todayWords} كلمة` : 'قوم اكمّل كلمة النهاردة'}
+              color="orange"
             />
           </div>
 
@@ -351,6 +374,9 @@ export function EnglishPractice() {
           <Card className="p-4 sm:p-6">
             <div className="flex items-center justify-between pb-3">
               <h2 className="text-base font-extrabold">حديقة كلماتك</h2>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                أتقنت {mastered.length} من {ACCOUNTING_ENGLISH.length}
+              </span>
               <button
                 onClick={() => {
                   if (confirm('تأكيد؟ هتحذف كل تقدمك في الإنجليزي.')) {
@@ -364,36 +390,42 @@ export function EnglishPractice() {
                 إعادة ضبط الإنجليزية
               </button>
             </div>
-            <div className="grid grid-cols-10 gap-1.5 sm:grid-cols-12">
-              {ACCOUNTING_ENGLISH.map((t) => {
-                const card = cards.find((c) => c.id === t.id)
-                return (
+            <ProgressBar value={(mastered.length / ACCOUNTING_ENGLISH.length) * 100} />
+            {mastered.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-8 text-center">
+                <span className="text-4xl">🌱</span>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  حديقتك فاضية لسه… كل مرة تنجح في كلمة، هيظهر هنا اسم الكلمة
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-1.5 pt-3">
+                {mastered.map(({ t, card }) => (
                   <button
                     key={t.id}
-                    title={`${t.en} — ${card ? LEVEL_LABEL[Math.min(card.level, MAX_LEVEL)] : 'جديدة'}`}
                     onClick={() => speak(t.en, false)}
+                    title={`${LEVEL_LABEL[Math.min(card.level, MAX_LEVEL)]} — ${t.ar}`}
                     className={cn(
-                      'flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-bold text-white transition-transform hover:scale-110',
-                      !card && 'bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-500',
-                      card && card.level === 0 && 'bg-emerald-200 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200',
-                      card && card.level > 0 && LEVEL_COLOR[Math.min(card.level, MAX_LEVEL)],
+                      'flex items-center gap-1 rounded-full py-1 pl-2 pr-1.5 text-xs font-bold text-white transition-transform hover:scale-105',
+                      LEVEL_COLOR[Math.min(card.level, MAX_LEVEL)],
                     )}
                   >
-                    {card && card.level > 0 ? Math.min(card.level, MAX_LEVEL) : ''}
+                    <span dir="ltr" className="font-mono">{t.en}</span>
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/25 text-[10px]">
+                      {Math.min(card.level, MAX_LEVEL)}
+                    </span>
                   </button>
-                )
-              })}
-            </div>
+                ))}
+              </div>
+            )}
             <div className="flex flex-wrap items-center gap-3 pt-3 text-xs text-slate-500 dark:text-slate-400">
-              <span className="flex items-center gap-1">
-                <span className="h-3 w-3 rounded-full bg-slate-300 dark:bg-slate-600" /> جديدة
-              </span>
               {[1, 3, 5, MAX_LEVEL].map((l) => (
                 <span key={l} className="flex items-center gap-1">
                   <span className={cn('h-3 w-3 rounded-full', LEVEL_COLOR[l])} />
                   {LEVEL_LABEL[l]}
                 </span>
               ))}
+              <span className="text-slate-400">دوس على الكلمة عشان تسمع نطقها</span>
             </div>
           </Card>
 
@@ -402,7 +434,7 @@ export function EnglishPractice() {
               <div className="flex items-start gap-2">
                 <IconXCircle size={16} className="mt-0.5 shrink-0 text-rose-500" />
                 <span>
-                  <b className="text-slate-700 dark:text-slate-200">قاعدة التقدّم:</b> ما تنتقلش للكلمة اللي بعدها غير لما تجاوب صح في مرحلة الحروف ومرحلة الكتابة — المحاولة بتتكرر لحد النجاح. وكل كلمة ليها صورة حقيقية خاصة بيها.
+                  <b className="text-slate-700 dark:text-slate-200">قاعدة التقدّم:</b> ما تنتقلش للكلمة اللي بعدها غير لما تجاوب صح في مرحلة الحروف ومرحلة الكتابة — المحاولة بتتكرر لحد النجاح. وكل كلمة ليها رسمة متحركة على معناها.
                 </span>
               </div>
               <div className="flex items-start gap-2">
