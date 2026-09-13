@@ -29,6 +29,18 @@ interface Session {
 
 const typeName = (t: AccountType) => getAccountType(t).nameAr
 
+function shuffleOptions(q: PracticeQuestion): PracticeQuestion {
+  const answer = q.options[q.correctIndex]
+  const options = [...q.options]
+  for (let i = options.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    const tmp = options[i]
+    options[i] = options[j]
+    options[j] = tmp
+  }
+  return { ...q, options, correctIndex: options.indexOf(answer) }
+}
+
 export function AccountTypes() {
   const [selected, setSelected] = useState<AccountType | null>(null)
   const [session, setSession] = useState<Session | null>(null)
@@ -43,7 +55,7 @@ export function AccountTypes() {
   const active = selected ? ACCOUNT_TYPES.find((t) => t.type === selected) : null
 
   const startStage = (stage: Stage) => {
-    const questions = stage.kind === 'mixed' ? mixedOrder() : TYPE_PRACTICE[stage.type]
+    const questions = (stage.kind === 'mixed' ? mixedOrder() : TYPE_PRACTICE[stage.type]).map(shuffleOptions)
     setSession({ stage, questions, index: 0, chosen: null, score: 0, done: false })
   }
 
@@ -95,7 +107,7 @@ export function AccountTypes() {
                 تدرب على الأنواع
               </h2>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                اختر مرحلة — ستة أسئلة لكل نوع، والمرحلة اللي بعدها بتفتح باب لما تحل اللي قبلها
+                اختر مرحلة — عشرون سؤالًا لكل نوع تعمق أكتر في النوع الواحد، والمرحلة اللي بعدها بتفتح باب لما تحل اللي قبلها
               </p>
             </div>
 
