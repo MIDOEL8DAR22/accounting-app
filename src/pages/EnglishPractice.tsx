@@ -50,6 +50,8 @@ function shuffle<T>(arr: T[]): T[] {
 
 let voiceCache: SpeechSynthesisVoice | null | undefined
 
+const VOICE_PREF = ['Google US English', 'Google UK English', 'Zira', 'Ava', 'Aria', 'Jenny', 'Michelle', 'Samantha', 'David', 'Daniel']
+
 function pickVoice(): SpeechSynthesisVoice | null {
   if (voiceCache !== undefined) return voiceCache
   const synth = window.speechSynthesis
@@ -58,11 +60,14 @@ function pickVoice(): SpeechSynthesisVoice | null {
     return null
   }
   const voices = synth.getVoices()
-  const voice =
-    voices.find((v) => v.lang === 'en-US') ??
-    voices.find((v) => v.lang.startsWith('en-US')) ??
-    voices.find((v) => v.lang.startsWith('en')) ??
-    null
+  const enUs = voices.filter((v) => v.lang === 'en-US')
+  const en = voices.filter((v) => v.lang.startsWith('en'))
+  const all = [...enUs, ...en]
+  const best = VOICE_PREF.reduce<SpeechSynthesisVoice | null>((found, name) => {
+    if (found) return found
+    return all.find((v) => v.name.includes(name)) ?? null
+  }, null)
+  const voice = best ?? enUs[0] ?? en[0] ?? null
   voiceCache = voice
   return voice
 }
@@ -73,8 +78,9 @@ function speak(text: string, slow: boolean) {
   synth.cancel()
   const u = new SpeechSynthesisUtterance(text)
   u.lang = 'en-US'
-  u.rate = slow ? 0.55 : 1
-  u.pitch = 1
+  u.rate = slow ? 0.55 : 0.85
+  u.pitch = 1.05
+  u.volume = 1
   const voice = pickVoice()
   if (voice) u.voice = voice
   synth.speak(u)
