@@ -68,7 +68,7 @@ def synth(text: str, out: str):
 def silence(ms: int, out: str):
     subprocess.run(
         ["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi",
-         "-i", f"anullsrc=r=24000:cl=mono", "-t", f"{ms / 1000:.3f}",
+         "-i", f"anullsrc=r=44100:cl=mono", "-t", f"{ms / 1000:.3f}",
          "-q:a", "9", out],
         check=True,
     )
@@ -81,7 +81,8 @@ def concat(files: list, out: str):
             f.write(f"file '{p.replace(os.sep, '/')}'\n")
     subprocess.run(
         ["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0",
-         "-i", lst, "-c:a", "libmp3lame", "-b:a", "64k", "-ar", "24000",
+         "-i", lst, "-af", "loudnorm=I=-16:TP=-1.5:LRA=11",
+         "-c:a", "libmp3lame", "-b:a", "128k", "-ar", "44100",
          "-ac", "1", out],
         check=True,
     )

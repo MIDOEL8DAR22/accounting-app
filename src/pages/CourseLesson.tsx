@@ -1,26 +1,20 @@
 import { useParams, Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Button } from '../components/ui'
-import { LessonBlockView } from '../components/LessonBlocks'
-import { COURSE, COURSE_LESSONS } from '../data/course'
+import { Button, Card } from '../components/ui'
+import { COURSE_LESSONS } from '../data/course'
 import { getProgress, completeLesson, touchLesson } from '../lib/progress'
-import { stopSpeech } from '../lib/speech'
-import { IconCheck, IconCheckCircle, IconArrowRight, IconArrowLeft, IconTarget, IconSpeaker } from '../components/icons'
+import { IconCheck, IconCheckCircle, IconArrowRight, IconArrowLeft, IconTarget, IconSpeaker, IconList } from '../components/icons'
 
 export function CourseLesson() {
   const { lessonId } = useParams<{ lessonId: string }>()
   const lesson = COURSE_LESSONS.find((l) => l.id === lessonId)
   const progress = getProgress()
   const done = lesson ? progress.completedLessons.includes(lesson.id) : false
-  const [tick, setTick] = useState(0)
+  const [, setTick] = useState(0)
 
   useEffect(() => {
     if (lesson) touchLesson(lesson.id)
   }, [lessonId])
-
-  useEffect(() => {
-    return () => stopSpeech()
-  }, [])
 
   if (!lesson) return <div className="text-center py-12">الدرس مش موجود</div>
 
@@ -38,7 +32,7 @@ export function CourseLesson() {
   return (
     <div className="space-y-6">
       <Link to="/course" className="inline-flex items-center gap-1 text-sm font-bold text-blue-600 hover:underline dark:text-blue-400">
-        <IconArrowLeft size={15} /> العودة للكورس
+        <IconArrowLeft size={15} /> كل الدروس
       </Link>
 
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-amber-700 via-orange-600 to-rose-600 p-6 text-white shadow-xl shadow-orange-700/20 sm:p-8">
@@ -46,7 +40,7 @@ export function CourseLesson() {
         <div className="relative">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-bold backdrop-blur">
-              الدرس {lesson.num} من {COURSE_LESSONS.length} — {COURSE.title}
+              الدرس {lesson.num} من {COURSE_LESSONS.length}
             </span>
             {done && (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/25 px-3 py-1 text-xs font-bold text-emerald-200">
@@ -59,29 +53,37 @@ export function CourseLesson() {
         </div>
       </div>
 
-      {tick >= 0 && (
-        <div className="flex flex-col gap-3 rounded-2xl border border-orange-100 bg-orange-50/70 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-orange-500/20 dark:bg-orange-500/10">
+      <Card className="border-2 border-orange-100 p-4 dark:border-orange-500/20 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-1.5 text-base font-extrabold text-orange-900 dark:text-orange-100">
               <IconSpeaker size={17} /> استمع للدرس
             </div>
-            <div className="text-xs text-orange-600/80 dark:text-orange-300/70">
-              شرح صوتي بالعربي للدرس كامل — جاهز للتشغيل
-            </div>
+            <div className="text-xs text-orange-600/80 dark:text-orange-300/70">شرح صوتي كامل للدرس — شغّله وريح نفسك</div>
           </div>
-          <audio controls preload="none" className="h-10 w-full sm:w-72" src={lesson.audio}>
+          <audio controls preload="none" className="h-10 w-full sm:w-80" src={lesson.audio}>
             المتصفح بتاعك مش بيشغّل الصوت
           </audio>
         </div>
-      )}
+      </Card>
 
-      <div className="space-y-5">
-        {lesson.blocks.map((block, i) => (
-          <LessonBlockView key={i} block={block} index={i + 1} />
-        ))}
-      </div>
+      <Card className="p-4 sm:p-6">
+        <div className="flex items-center gap-2 text-base font-extrabold text-slate-800 dark:text-slate-100">
+          <IconList size={17} className="text-amber-500" /> خلاصة الدرس
+        </div>
+        <ul className="mt-3 space-y-2.5">
+          {lesson.summary.map((point, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-100 text-[10px] font-extrabold text-orange-600 dark:bg-orange-500/15 dark:text-orange-400">
+                {i + 1}
+              </span>
+              <span>{point}</span>
+            </li>
+          ))}
+        </ul>
+      </Card>
 
-      <div className="text-center space-y-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+      <div className="text-center">
         {!done ? (
           <Button onClick={handleComplete} variant="success" className="px-8">
             <IconCheck size={16} /> أتممت الدرس!
@@ -97,25 +99,25 @@ export function CourseLesson() {
         <div className="text-center">
           <Link to="/course/quiz">
             <Button variant="warning">
-              <IconTarget size={16} /> خلصنا الدروس — روّح للاختبار
+              <IconTarget size={16} /> خلصنا الدروس — روّح للأسئلة
             </Button>
           </Link>
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+      <div className="flex items-center justify-between gap-4 border-t border-slate-200 pt-5 dark:border-slate-700">
         {prev ? (
           <Link to={`/course/${prev.id}`} className="flex-1">
-            <Button variant="secondary" className="w-full"><IconArrowRight size={15} /> الدرس اللي فات</Button>
+            <Button variant="secondary" className="w-full"><IconArrowRight size={15} /> السابق</Button>
           </Link>
         ) : <div />}
         {next ? (
           <Link to={`/course/${next.id}`} className="flex-1">
-            <Button className="w-full"><IconArrowLeft size={15} /> الدرس الجاي</Button>
+            <Button className="w-full"><IconArrowLeft size={15} /> التالي</Button>
           </Link>
         ) : (
           <Link to="/course" className="flex-1">
-            <Button variant="success" className="w-full"><IconTarget size={15} /> رجوع للكورس</Button>
+            <Button variant="success" className="w-full"><IconTarget size={15} /> كل الدروس</Button>
           </Link>
         )}
       </div>
