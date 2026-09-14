@@ -24,11 +24,18 @@ export function StartLearning() {
           const accents = [
             'border-orange-200 bg-gradient-to-l from-orange-50 to-amber-50 dark:border-orange-500/30 dark:from-orange-500/10 dark:to-amber-500/10',
             'border-violet-200 bg-gradient-to-l from-violet-50 to-sky-50 dark:border-violet-500/30 dark:from-violet-500/10 dark:to-sky-500/10',
+            'border-emerald-200 bg-gradient-to-l from-emerald-50 to-teal-50 dark:border-emerald-500/30 dark:from-emerald-500/10 dark:to-teal-500/10',
           ]
           const iconColors = [
             'bg-gradient-to-br from-amber-500 to-rose-500 shadow-orange-500/30',
             'bg-gradient-to-br from-violet-500 to-sky-500 shadow-violet-500/30',
+            'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-emerald-500/30',
           ]
+          const badgeLabels = ['المحاضرة الأولى', 'المحاضرة الثانية', 'المحاضرة الثالثة']
+          const badgeClr: ['orange', 'violet', 'green'] = ['orange', 'violet', 'green']
+          const iconClr = ['text-orange-500', 'text-violet-500', 'text-emerald-500']
+          const progressClr = ['from-amber-500 to-rose-500', 'from-violet-500 to-sky-500', 'from-emerald-500 to-teal-500']
+          const btnVariant: 'warning' | 'secondary' | 'success' = ci === 0 ? 'warning' : ci === 2 ? 'success' : 'secondary'
           return (
             <Link to="/course" className="block" key={course.id}>
               <Card className={`relative overflow-hidden border-2 ${accents[ci]}`}>
@@ -39,19 +46,19 @@ export function StartLearning() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-base font-extrabold text-slate-800 dark:text-slate-100">{course.title}</h2>
-                      <Badge color={ci === 0 ? 'orange' : 'violet'}>المحاضرة {ci === 0 ? 'الأولى' : 'الثانية'}</Badge>
+                      <Badge color={badgeClr[ci]}>{badgeLabels[ci]}</Badge>
                     </div>
                     <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{course.tagline}</p>
                     <div className="mt-2 flex items-center gap-3">
-                      <ProgressBar value={pct} color={`bg-gradient-to-r ${ci === 0 ? 'from-amber-500 to-rose-500' : 'from-violet-500 to-sky-500'}`} className="flex-1" />
+                      <ProgressBar value={pct} color={`bg-gradient-to-r ${progressClr[ci]}`} className="flex-1" />
                       <span className="text-xs font-bold text-slate-400">{done}/{course.lessons.length} دروس خلصتها</span>
                     </div>
                     <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-slate-500 dark:text-slate-400">
-                      <span className="inline-flex items-center gap-1"><IconSpeaker size={13} className={ci === 0 ? 'text-orange-500' : 'text-violet-500'} /> صوت عربي لكل درس</span>
-                      <span className="inline-flex items-center gap-1"><IconTarget size={13} className={ci === 0 ? 'text-orange-500' : 'text-violet-500'} /> اختبار على المحاضرة</span>
+                      <span className="inline-flex items-center gap-1"><IconSpeaker size={13} className={iconClr[ci]} /> صوت عربي لكل درس</span>
+                      <span className="inline-flex items-center gap-1"><IconTarget size={13} className={iconClr[ci]} /> اختبار على المحاضرة</span>
                     </div>
                   </div>
-                  <Button variant={ci === 0 ? 'warning' : 'secondary'} className="shrink-0 gap-1.5">
+                  <Button variant={btnVariant} className="shrink-0 gap-1.5">
                     <IconPlay size={15} /> شوف المحاضرة
                   </Button>
                 </div>

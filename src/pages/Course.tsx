@@ -23,7 +23,7 @@ export function Course() {
           </div>
           <h1 className="mt-4 text-2xl font-extrabold leading-tight sm:text-4xl">محاضرات الكورس</h1>
           <p className="mt-2 text-base text-orange-100 sm:text-lg">
-            امشي بالترتيب: المحاضرة الأولى أسس، والتانية أنواع الحسابات — كل درس صوت + شرح مصور + أسئلة في الآخر.
+            امشي بالترتيب: المحاضرة الأولى أسس، والتانية أنواع الحسابات، والتالتة كل تفصيلة بالتفصيل — كل درس صوت + شرح مصور + أسئلة في الآخر.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold text-orange-100">
             <span className="inline-flex items-center gap-1.5"><IconSpeaker size={15} /> كل درس له صوت عربي</span>
@@ -40,16 +40,27 @@ export function Course() {
         const accents = [
           'from-amber-500 to-rose-500',
           'from-violet-500 to-sky-500',
+          'from-emerald-500 to-teal-500',
         ]
         const lightAccents = [
           'border-orange-100 bg-orange-50/60 dark:border-orange-500/20 dark:bg-orange-500/5',
           'border-violet-100 bg-violet-50/60 dark:border-violet-500/20 dark:bg-violet-500/5',
+          'border-emerald-100 bg-emerald-50/60 dark:border-emerald-500/20 dark:bg-emerald-500/5',
         ]
         const titleClr = [
           'text-orange-900 dark:text-orange-100',
           'text-violet-900 dark:text-violet-100',
+          'text-emerald-900 dark:text-emerald-100',
         ]
-        const badge = ci === 0 ? 'المحاضرة الأولى' : 'المحاضرة الثانية'
+        const badgeClr: ['orange', 'violet', 'green'] = ['orange', 'violet', 'green']
+        const lectureNames = ['المحاضرة الأولى', 'المحاضرة الثانية', 'المحاضرة الثالثة']
+        const badge = lectureNames[ci]
+        const playClr = [
+          'bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400',
+          'bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400',
+          'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400',
+        ]
+        const clipboardClr = ['text-blue-600', 'text-violet-600', 'text-emerald-600']
 
         return (
           <section key={course.id} className="space-y-4">
@@ -61,9 +72,9 @@ export function Course() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className={`text-lg font-extrabold ${titleClr[ci]}`}>{course.title}</h2>
-                    <Badge color={ci === 0 ? 'orange' : 'violet'}>{badge}</Badge>
+                    <Badge color={badgeClr[ci]}>{badge}</Badge>
                   </div>
-                  <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{course.tagline}</p>
+                  <div className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{course.tagline}</div>
                   <div className="mt-2 flex items-center gap-3">
                     <ProgressBar value={pct} className="flex-1" />
                     <span className="text-xs font-bold text-slate-400">{doneCount}/{course.lessons.length} دروس خلصتها</span>
@@ -91,11 +102,7 @@ export function Course() {
                         <div className="truncate text-sm font-extrabold text-slate-800 dark:text-slate-100">{lesson.title}</div>
                         <div className="truncate text-xs text-slate-500 dark:text-slate-400">{lesson.subtitle}</div>
                       </div>
-                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                        ci === 0
-                          ? 'bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400'
-                          : 'bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400'
-                      }`}>
+                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${playClr[ci]}`}>
                         <IconPlay size={15} />
                       </span>
                     </Card>
@@ -106,7 +113,7 @@ export function Course() {
 
             <div>
               <div className="mb-2 flex items-center gap-2 text-base font-extrabold text-slate-800 dark:text-slate-100">
-                <IconClipboard size={17} className={ci === 0 ? 'text-blue-600' : 'text-violet-600'} /> أسئلة {badge}
+                <IconClipboard size={17} className={clipboardClr[ci]} /> أسئلة {badge}
               </div>
               <Card className="border-2 border-blue-100 bg-blue-50/70 dark:border-blue-500/20 dark:bg-blue-500/10">
                 <p className="text-sm leading-relaxed text-blue-800/90 dark:text-blue-200/80">

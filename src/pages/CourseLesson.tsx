@@ -43,7 +43,7 @@ export function CourseLesson() {
         <div className="relative">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-bold backdrop-blur">
-              {course.id === 'c2' ? 'المحاضرة الثانية' : 'المحاضرة الأولى'} — الدرس {lesson.num} من {course.lessons.length}
+              {course.id === 'c3' ? 'المحاضرة الثالثة' : course.id === 'c2' ? 'المحاضرة الثانية' : 'المحاضرة الأولى'} — الدرس {lesson.num} من {course.lessons.length}
             </span>
             {done && (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/25 px-3 py-1 text-xs font-bold text-emerald-200">
