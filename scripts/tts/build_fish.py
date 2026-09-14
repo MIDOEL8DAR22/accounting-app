@@ -10,8 +10,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 WORK = os.path.join(HERE, "_work")
 os.makedirs(WORK, exist_ok=True)
 
+VOICE_ID = "047cdec372454af7a3ba61b4c5ede605"
+MODEL = "s2.1-pro-free"
 MAX_CHUNK = 180
-SENT_END = re.compile(r"(?<=[.؟!।،؛:])\s+|(?<=[.؟!])\s*", re.UNICODE)
+SPEED = 1.35
 
 
 def split_text(text: str):
@@ -43,20 +45,35 @@ def split_text(text: str):
     return parts
 
 
-def synth_google(text: str, out: str):
-    url = (
-        "https://translate.google.com/translate_tts"
-        f"?ie=UTF-8&tl=ar&client=tw-ob&q={urllib.parse.quote(text)}&ttsspeed=1"
-    )
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+def synth(text: str, out: str):
+    key = os.environ.get("FISH_KEY", "")
+    if not key:
+        raise RuntimeError("FISH_KEY env not set")
+    body = {
+        "text": text,
+        "reference_id": VOICE_ID,
+        "format": "mp3",
+        "prosody": {"speed": SPEED},
+    }
+    payload = urllib.parse.urlencode({}).encode()
+    data = json_dumps(body).encode("utf-8")
     for attempt in range(6):
         try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                data = resp.read()
-            if len(data) < 2000:
-                raise RuntimeError(f"too small {len(data)}")
+            req = urllib.request.Request(
+                "https://api.fish.audio/v1/tts",
+                data=data,
+                headers={
+                    "Authorization": f"Bearer {key}",
+                    "model": MODEL,
+                    "Content-Type": "application/json",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                raw = resp.read()
+            if len(raw) < 1000:
+                raise RuntimeError(f"too small {len(raw)}")
             with open(out, "wb") as f:
-                f.write(data)
+                f.write(raw)
             return
         except Exception as e:
             wait = 3 * (attempt + 1)
@@ -65,18 +82,10 @@ def synth_google(text: str, out: str):
     raise RuntimeError(f"failed: {text[:40]}")
 
 
-def synth_edge(text: str, out: str, voice: str):
-    import asyncio
-    import edge_tts
+def json_dumps(obj):
+    import json
 
-    asyncio.run(edge_tts.Communicate(text, voice).save(out))
-
-
-def synth(text: str, out: str, voice: str):
-    if voice == "google":
-        synth_google(text, out)
-    else:
-        synth_edge(text, out, voice)
+    return json.dumps(obj, ensure_ascii=False)
 
 
 def silence(ms: int, out: str):
@@ -89,7 +98,7 @@ def silence(ms: int, out: str):
 
 
 def concat(files: list, out: str):
-    lst = os.path.join(WORK, "list.txt")
+    lst = os.path.join(WORK, "list_fish.txt")
     with open(lst, "w", encoding="utf-8") as f:
         for p in files:
             f.write(f"file '{p.replace(os.sep, '/')}'\n")
@@ -104,23 +113,27 @@ def concat(files: list, out: str):
 
 def main():
     lesson = sys.argv[1] if len(sys.argv) > 1 else "l1"
-    voice = sys.argv[2] if len(sys.argv) > 2 else "google"
     src = os.path.join(HERE, "course1", f"{lesson}.txt")
     with open(src, encoding="utf-8-sig") as f:
         text = f.read()
     chunks = split_text(text)
-    print(f"{lesson} ({voice}): {len(chunks)} chunks")
+    print(f"{lesson}: {len(chunks)} chunks")
     parts = []
     for i, c in enumerate(chunks):
-        cfile = os.path.join(WORK, f"{lesson}_{i:03d}.mp3")
-        gap = os.path.join(WORK, f"{lesson}_{i:03d}_gap.mp3")
+        cfile = os.path.join(WORK, f"fish_{lesson}_{i:03d}.mp3")
+        gap = os.path.join(WORK, f"fish_{lesson}_{i:03d}_gap.mp3")
         print(f"  {i + 1}/{len(chunks)} ({len(c)} chars)")
-        synth(c, cfile, voice)
+        synth(c, cfile)
+        dur = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "csv=p=0", cfile],
+            capture_output=True, text=True,
+        ).stdout.strip()
+        print(f"    -> {dur}s")
         parts.append(cfile)
         if i < len(chunks) - 1:
             silence(180, gap)
             parts.append(gap)
-        time.sleep(0.7)
     outdir = os.path.join(HERE, "..", "..", "public", "audio", "course1")
     os.makedirs(outdir, exist_ok=True)
     final = os.path.join(outdir, f"{lesson}.mp3")
