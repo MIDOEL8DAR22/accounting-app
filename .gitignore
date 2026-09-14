@@ -35,3 +35,6 @@ dev-server-err.log
 *.njsproj
 *.sln
 *.sw?
+
+# TTS build artifacts
+scripts/tts/_work/
