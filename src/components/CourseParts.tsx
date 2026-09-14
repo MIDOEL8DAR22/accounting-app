@@ -1,5 +1,35 @@
-import type { CoursePart } from '../data/course'
+import { Fragment, type ReactNode } from 'react'
+import type { CoursePart, CourseTone } from '../data/course'
 import { IconLightbulb } from './icons'
+
+const TONES: Record<CourseTone, string> = {
+  emerald: 'border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10',
+  rose: 'border-rose-200 bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10',
+  sky: 'border-sky-200 bg-sky-50 dark:border-sky-500/30 dark:bg-sky-500/10',
+  amber: 'border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10',
+  violet: 'border-violet-200 bg-violet-50 dark:border-violet-500/30 dark:bg-violet-500/10',
+}
+
+const TONES_TEXT: Record<CourseTone, string> = {
+  emerald: 'text-emerald-800 dark:text-emerald-200',
+  rose: 'text-rose-800 dark:text-rose-200',
+  sky: 'text-sky-800 dark:text-sky-200',
+  amber: 'text-amber-800 dark:text-amber-200',
+  violet: 'text-violet-800 dark:text-violet-200',
+}
+
+function Panel({ title, children }: { title?: string; children: ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
+      {title && (
+        <div className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-sm font-extrabold text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200">
+          {title}
+        </div>
+      )}
+      {children}
+    </div>
+  )
+}
 
 function TextPart({ part }: { part: Extract<CoursePart, { kind: 'text' }> }) {
   return <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{part.text}</p>
@@ -118,6 +148,70 @@ function TAccountPart({ part }: { part: Extract<CoursePart, { kind: 'taccount' }
   )
 }
 
+function BoxesPart({ part }: { part: Extract<CoursePart, { kind: 'boxes' }> }) {
+  return (
+    <Panel title={part.title}>
+      <div className="grid gap-2 p-2.5 sm:grid-cols-2">
+        {part.items.map((box, i) => (
+          <div key={i} className={`rounded-xl border-2 p-3 ${TONES[box.tone ?? 'sky']}`}>
+            <div className={`text-sm font-extrabold ${TONES_TEXT[box.tone ?? 'sky']}`}>{box.title}</div>
+            <div className={`mt-1 text-xs leading-relaxed ${TONES_TEXT[box.tone ?? 'sky']} opacity-80`}>{box.text}</div>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  )
+}
+
+function FlowPart({ part }: { part: Extract<CoursePart, { kind: 'flow' }> }) {
+  return (
+    <Panel title={part.title}>
+      <div className="flex flex-wrap items-center gap-2 p-3">
+        {part.nodes.map((node, i) => (
+          <Fragment key={i}>
+            {i > 0 && (
+              <span className="text-lg font-extrabold text-slate-400 dark:text-slate-500">←</span>
+            )}
+            <div className="rounded-xl border-2 border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold leading-relaxed text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
+              {node}
+            </div>
+          </Fragment>
+        ))}
+      </div>
+    </Panel>
+  )
+}
+
+function TreePart({ part }: { part: Extract<CoursePart, { kind: 'tree' }> }) {
+  return (
+    <Panel title={part.title}>
+      <div className="space-y-3 p-3">
+        <div className="mx-auto w-fit max-w-full rounded-xl border-2 border-slate-300 bg-slate-100 px-4 py-2 text-center text-sm font-extrabold text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
+          {part.root}
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {part.branches.map((branch, i) => (
+            <div key={i} className={`rounded-xl border-2 p-3 ${TONES[branch.tone ?? 'sky']}`}>
+              <div className={`text-sm font-extrabold ${TONES_TEXT[branch.tone ?? 'sky']}`}>{branch.label}</div>
+              {branch.notes && (
+                <div className={`mt-0.5 text-xs ${TONES_TEXT[branch.tone ?? 'sky']} opacity-70`}>{branch.notes}</div>
+              )}
+              <ul className="mt-1.5 space-y-1">
+                {branch.items.map((item) => (
+                  <li key={item} className={`flex items-start gap-1.5 text-right text-xs font-bold ${TONES_TEXT[branch.tone ?? 'sky']}`}>
+                    <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Panel>
+  )
+}
+
 export function CourseParts({ parts }: { parts: CoursePart[] }) {
   return (
     <div className="mt-3 space-y-3">
@@ -128,6 +222,9 @@ export function CourseParts({ parts }: { parts: CoursePart[] }) {
         if (part.kind === 'table') return <TablePart key={i} part={part} />
         if (part.kind === 'equation') return <EquationPart key={i} part={part} />
         if (part.kind === 'taccount') return <TAccountPart key={i} part={part} />
+        if (part.kind === 'boxes') return <BoxesPart key={i} part={part} />
+        if (part.kind === 'flow') return <FlowPart key={i} part={part} />
+        if (part.kind === 'tree') return <TreePart key={i} part={part} />
         return null
       })}
     </div>
