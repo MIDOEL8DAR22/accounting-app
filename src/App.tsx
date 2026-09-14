@@ -21,6 +21,9 @@ const Summary = lazy(() => import('./pages/Summary').then(m => ({ default: m.Sum
 const Practical = lazy(() => import('./pages/Practical').then(m => ({ default: m.Practical })))
 const Accountant = lazy(() => import('./pages/Accountant').then(m => ({ default: m.Accountant })))
 const EnglishPractice = lazy(() => import('./pages/EnglishPractice').then(m => ({ default: m.EnglishPractice })))
+const Course = lazy(() => import('./pages/Course').then(m => ({ default: m.Course })))
+const CourseLesson = lazy(() => import('./pages/CourseLesson').then(m => ({ default: m.CourseLesson })))
+const CourseQuiz = lazy(() => import('./pages/CourseQuiz').then(m => ({ default: m.CourseQuiz })))
 
 function Loader() {
   return (
@@ -56,6 +59,9 @@ export default function App() {
               <Route path="/practical" element={<Practical />} />
               <Route path="/accountant" element={<Accountant />} />
               <Route path="/english" element={<EnglishPractice />} />
+              <Route path="/course" element={<Course />} />
+              <Route path="/course/:lessonId" element={<CourseLesson />} />
+              <Route path="/course/quiz" element={<CourseQuiz />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/builder" element={<Builder />} />
               <Route path="*" element={<Dashboard />} />
