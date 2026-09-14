@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { Button, Card } from '../components/ui'
+import { CourseParts } from '../components/CourseParts'
 import { COURSE_LESSONS } from '../data/course'
 import { getProgress, completeLesson, touchLesson } from '../lib/progress'
 import { IconCheck, IconCheckCircle, IconArrowRight, IconArrowLeft, IconTarget, IconSpeaker, IconList } from '../components/icons'
@@ -69,18 +70,9 @@ export function CourseLesson() {
 
       <Card className="p-4 sm:p-6">
         <div className="flex items-center gap-2 text-base font-extrabold text-slate-800 dark:text-slate-100">
-          <IconList size={17} className="text-amber-500" /> خلاصة الدرس
+          <IconList size={17} className="text-amber-500" /> شرح الدرس بالتفصيل
         </div>
-        <ul className="mt-3 space-y-2.5">
-          {lesson.summary.map((point, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-100 text-[10px] font-extrabold text-orange-600 dark:bg-orange-500/15 dark:text-orange-400">
-                {i + 1}
-              </span>
-              <span>{point}</span>
-            </li>
-          ))}
-        </ul>
+        <CourseParts parts={lesson.parts} />
       </Card>
 
       <div className="text-center">
