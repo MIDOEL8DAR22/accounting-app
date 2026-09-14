@@ -2,13 +2,11 @@ import { Link } from 'react-router-dom'
 import { Card, ProgressBar, Button, Badge } from '../components/ui'
 import { IconStage, IconCheck, IconTarget, IconPlay, IconBookOpen, IconSpeaker } from '../components/icons'
 import { STAGES } from '../data/stages'
-import { COURSE, COURSE_LESSONS } from '../data/course'
+import { COURSES } from '../data/course'
 import { getProgress } from '../lib/progress'
 
 export function StartLearning() {
   const progress = getProgress()
-  const courseDone = COURSE_LESSONS.filter((l) => progress.completedLessons.includes(l.id)).length
-  const coursePct = Math.round((courseDone / COURSE_LESSONS.length) * 100)
   return (
     <div className="space-y-6">
       <div>
@@ -20,33 +18,47 @@ export function StartLearning() {
 
       <section className="space-y-3">
         <div className="text-[11px] font-extrabold uppercase tracking-wide text-slate-400 dark:text-slate-500">كورسات</div>
-        <Link to="/course" className="block">
-          <Card className="relative overflow-hidden border-2 border-orange-200 bg-gradient-to-l from-orange-50 to-amber-50 dark:border-orange-500/30 dark:from-orange-500/10 dark:to-amber-500/10">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-rose-500 text-white shadow-md shadow-orange-500/30">
-                <IconBookOpen size={24} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-base font-extrabold text-slate-800 dark:text-slate-100">{COURSE.title}</h2>
-                  <Badge color="amber">الجديدة</Badge>
+        {COURSES.map((course, ci) => {
+          const done = COURSES[ci].lessons.filter((l) => progress.completedLessons.includes(l.id)).length
+          const pct = Math.round((done / COURSES[ci].lessons.length) * 100)
+          const accents = [
+            'border-orange-200 bg-gradient-to-l from-orange-50 to-amber-50 dark:border-orange-500/30 dark:from-orange-500/10 dark:to-amber-500/10',
+            'border-violet-200 bg-gradient-to-l from-violet-50 to-sky-50 dark:border-violet-500/30 dark:from-violet-500/10 dark:to-sky-500/10',
+          ]
+          const iconColors = [
+            'bg-gradient-to-br from-amber-500 to-rose-500 shadow-orange-500/30',
+            'bg-gradient-to-br from-violet-500 to-sky-500 shadow-violet-500/30',
+          ]
+          return (
+            <Link to="/course" className="block" key={course.id}>
+              <Card className={`relative overflow-hidden border-2 ${accents[ci]}`}>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white shadow-md ${iconColors[ci]}`}>
+                    <IconBookOpen size={24} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-base font-extrabold text-slate-800 dark:text-slate-100">{course.title}</h2>
+                      <Badge color={ci === 0 ? 'orange' : 'violet'}>المحاضرة {ci === 0 ? 'الأولى' : 'الثانية'}</Badge>
+                    </div>
+                    <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{course.tagline}</p>
+                    <div className="mt-2 flex items-center gap-3">
+                      <ProgressBar value={pct} color={`bg-gradient-to-r ${ci === 0 ? 'from-amber-500 to-rose-500' : 'from-violet-500 to-sky-500'}`} className="flex-1" />
+                      <span className="text-xs font-bold text-slate-400">{done}/{course.lessons.length} دروس خلصتها</span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-slate-500 dark:text-slate-400">
+                      <span className="inline-flex items-center gap-1"><IconSpeaker size={13} className={ci === 0 ? 'text-orange-500' : 'text-violet-500'} /> صوت عربي لكل درس</span>
+                      <span className="inline-flex items-center gap-1"><IconTarget size={13} className={ci === 0 ? 'text-orange-500' : 'text-violet-500'} /> اختبار على المحاضرة</span>
+                    </div>
+                  </div>
+                  <Button variant={ci === 0 ? 'warning' : 'secondary'} className="shrink-0 gap-1.5">
+                    <IconPlay size={15} /> شوف المحاضرة
+                  </Button>
                 </div>
-                <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{COURSE.tagline}</p>
-                <div className="mt-2 flex items-center gap-3">
-                  <ProgressBar value={coursePct} color="bg-gradient-to-r from-amber-500 to-rose-500" className="flex-1" />
-                  <span className="text-xs font-bold text-slate-400">{courseDone}/{COURSE_LESSONS.length} دروس خلصتها</span>
-                </div>
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-slate-500 dark:text-slate-400">
-                  <span className="inline-flex items-center gap-1"><IconSpeaker size={13} className="text-orange-500" /> صوت عربي لكل درس</span>
-                  <span className="inline-flex items-center gap-1"><IconTarget size={13} className="text-orange-500" /> اختبار على المحاضرة</span>
-                </div>
-              </div>
-              <Button variant="warning" className="shrink-0 gap-1.5">
-                <IconPlay size={15} /> شوف الكورس
-              </Button>
-            </div>
-          </Card>
-        </Link>
+              </Card>
+            </Link>
+          )
+        })}
       </section>
 
       <section className="space-y-3">

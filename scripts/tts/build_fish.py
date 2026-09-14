@@ -113,7 +113,8 @@ def concat(files: list, out: str):
 
 def main():
     lesson = sys.argv[1] if len(sys.argv) > 1 else "l1"
-    src = os.path.join(HERE, "course1", f"{lesson}.txt")
+    course = sys.argv[2] if len(sys.argv) > 2 else "course1"
+    src = os.path.join(HERE, course, f"{lesson}.txt")
     with open(src, encoding="utf-8-sig") as f:
         text = f.read()
     chunks = split_text(text)
@@ -134,7 +135,7 @@ def main():
         if i < len(chunks) - 1:
             silence(180, gap)
             parts.append(gap)
-    outdir = os.path.join(HERE, "..", "..", "public", "audio", "course1")
+    outdir = os.path.join(HERE, "..", "..", "public", "audio", course)
     os.makedirs(outdir, exist_ok=True)
     final = os.path.join(outdir, f"{lesson}.mp3")
     concat(parts, final)

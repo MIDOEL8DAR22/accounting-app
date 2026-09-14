@@ -2,13 +2,14 @@ import { useParams, Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { Button, Card } from '../components/ui'
 import { CourseParts } from '../components/CourseParts'
-import { COURSE_LESSONS } from '../data/course'
+import { COURSES } from '../data/course'
 import { getProgress, completeLesson, touchLesson } from '../lib/progress'
 import { IconCheck, IconCheckCircle, IconArrowRight, IconArrowLeft, IconTarget, IconSpeaker, IconList } from '../components/icons'
 
 export function CourseLesson() {
   const { lessonId } = useParams<{ lessonId: string }>()
-  const lesson = COURSE_LESSONS.find((l) => l.id === lessonId)
+  const course = COURSES.find((c) => c.lessons.some((l) => l.id === lessonId))
+  const lesson = course?.lessons.find((l) => l.id === lessonId)
   const progress = getProgress()
   const done = lesson ? progress.completedLessons.includes(lesson.id) : false
   const [, setTick] = useState(0)
@@ -17,11 +18,12 @@ export function CourseLesson() {
     if (lesson) touchLesson(lesson.id)
   }, [lessonId])
 
-  if (!lesson) return <div className="text-center py-12">الدرس مش موجود</div>
+  if (!course || !lesson) return <div className="text-center py-12">الدرس مش موجود</div>
 
-  const index = COURSE_LESSONS.findIndex((l) => l.id === lesson.id)
-  const prev = index > 0 ? COURSE_LESSONS[index - 1] : null
-  const next = index < COURSE_LESSONS.length - 1 ? COURSE_LESSONS[index + 1] : null
+  const index = course.lessons.findIndex((l) => l.id === lesson.id)
+  const prev = index > 0 ? course.lessons[index - 1] : null
+  const next = index < course.lessons.length - 1 ? course.lessons[index + 1] : null
+  const lastLesson = index === course.lessons.length - 1
 
   const handleComplete = () => {
     if (!done) {
@@ -41,7 +43,7 @@ export function CourseLesson() {
         <div className="relative">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-bold backdrop-blur">
-              الدرس {lesson.num} من {COURSE_LESSONS.length}
+              {course.id === 'c2' ? 'المحاضرة الثانية' : 'المحاضرة الأولى'} — الدرس {lesson.num} من {course.lessons.length}
             </span>
             {done && (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/25 px-3 py-1 text-xs font-bold text-emerald-200">
@@ -87,9 +89,9 @@ export function CourseLesson() {
         )}
       </div>
 
-      {index === COURSE_LESSONS.length - 1 && (
+      {lastLesson && (
         <div className="text-center">
-          <Link to="/course/quiz">
+          <Link to={`/course/${course.id}/quiz`}>
             <Button variant="warning">
               <IconTarget size={16} /> خلصنا الدروس — روّح للأسئلة
             </Button>

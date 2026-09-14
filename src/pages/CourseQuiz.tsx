@@ -1,18 +1,21 @@
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useState } from 'react'
 import { Card, Button, ProgressBar } from '../components/ui'
-import { COURSE_QUIZ } from '../data/course'
+import { COURSES } from '../data/course'
 import { recordQuiz } from '../lib/progress'
 import { cn } from '../lib/cn'
 import { IconCheck, IconXCircle, IconArrowRight, IconRefresh, IconArrowLeft, IconAward } from '../components/icons'
 
 export function CourseQuiz() {
+  const { courseId = 'c1' } = useParams<{ courseId: string }>()
+  const course = COURSES.find((c) => c.id === courseId) ?? COURSES[0]
+  const quiz = course.quiz ?? []
   const [index, setIndex] = useState(0)
   const [chosen, setChosen] = useState<number | null>(null)
   const [score, setScore] = useState(0)
   const [done, setDone] = useState(false)
 
-  const q = COURSE_QUIZ[index]
+  const q = quiz[index]
   const answered = chosen !== null
   const correct = answered && chosen === q.correctIndex
 
@@ -23,11 +26,11 @@ export function CourseQuiz() {
   }
 
   const next = () => {
-    if (index < COURSE_QUIZ.length - 1) {
+    if (index < quiz.length - 1) {
       setIndex((i) => i + 1)
       setChosen(null)
     } else {
-      recordQuiz(score, COURSE_QUIZ.length)
+      recordQuiz(score, quiz.length)
       setDone(true)
     }
   }
@@ -40,7 +43,7 @@ export function CourseQuiz() {
   }
 
   if (done) {
-    const pct = Math.round((score / COURSE_QUIZ.length) * 100)
+    const pct = Math.round((score / quiz.length) * 100)
     return (
       <div className="space-y-6">
         <Link to="/course" className="inline-flex items-center gap-1 text-sm font-bold text-blue-600 hover:underline dark:text-blue-400">
@@ -50,7 +53,7 @@ export function CourseQuiz() {
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-rose-500 mx-auto text-white">
             <IconAward size={28} />
           </div>
-          <h1 className="mt-4 text-2xl font-extrabold text-slate-800 dark:text-slate-100">نتيجتك: {score} من {COURSE_QUIZ.length}</h1>
+          <h1 className="mt-4 text-2xl font-extrabold text-slate-800 dark:text-slate-100">نتيجتك: {score} من {quiz.length}</h1>
           <ProgressBar value={pct} className="mx-auto mt-3 max-w-sm" />
           <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
             {pct === 100 ? 'باشا! انت جاوبت صح كلها — الميزانية في دماغك' : pct >= 70 ? 'كلام حلو — راجع اللي غلط فيه وادوس تاني' : 'متزعلش — اسمع الدروس تاني وحاول'}
@@ -75,7 +78,7 @@ export function CourseQuiz() {
       </Link>
 
       <div>
-        <h1 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 sm:text-2xl">اختبار المحاضرة الأولى</h1>
+        <h1 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 sm:text-2xl">اختبار {course.title}</h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           جاوب باللي فاهمه — وكل سؤال فيه تفسير عشان تذاكر أول بأول
         </p>
@@ -83,10 +86,10 @@ export function CourseQuiz() {
 
       <Card className="space-y-4">
         <div className="flex items-center justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
-          <span>سؤال {index + 1} من {COURSE_QUIZ.length}</span>
+          <span>سؤال {index + 1} من {quiz.length}</span>
           <span>صح عندك: {score}</span>
         </div>
-        <ProgressBar value={((index + (answered ? 1 : 0)) / COURSE_QUIZ.length) * 100} />
+        <ProgressBar value={((index + (answered ? 1 : 0)) / quiz.length) * 100} />
 
         <h2 className="text-lg font-extrabold leading-relaxed text-slate-800 dark:text-slate-100">{q.question}</h2>
 
@@ -125,7 +128,7 @@ export function CourseQuiz() {
 
         {answered && (
           <Button onClick={next} className="w-full">
-            {index < COURSE_QUIZ.length - 1 ? 'السؤال الجاي' : 'عرض النتيجة'} <IconArrowRight size={15} />
+            {index < quiz.length - 1 ? 'السؤال الجاي' : 'عرض النتيجة'} <IconArrowRight size={15} />
           </Button>
         )}
       </Card>
