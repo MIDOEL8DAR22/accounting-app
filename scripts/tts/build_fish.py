@@ -13,7 +13,7 @@ os.makedirs(WORK, exist_ok=True)
 VOICE_ID = "047cdec372454af7a3ba61b4c5ede605"
 MODEL = "s2.1-pro-free"
 MAX_CHUNK = 180
-SPEED = 1.35
+SPEED = 1.1
 
 
 def split_text(text: str):
