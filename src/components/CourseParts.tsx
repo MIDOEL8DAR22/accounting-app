@@ -1,6 +1,10 @@
 import type { CoursePart } from '../data/course'
 import { IconLightbulb } from './icons'
 
+function TextPart({ part }: { part: Extract<CoursePart, { kind: 'text' }> }) {
+  return <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{part.text}</p>
+}
+
 function PointPart({ part, index }: { part: Extract<CoursePart, { kind: 'point' }>; index: number }) {
   return (
     <li className="flex items-start gap-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
@@ -117,13 +121,9 @@ function TAccountPart({ part }: { part: Extract<CoursePart, { kind: 'taccount' }
 export function CourseParts({ parts }: { parts: CoursePart[] }) {
   return (
     <div className="mt-3 space-y-3">
-      <ul className="space-y-2.5">
-        {parts.map((part, i) =>
-          part.kind === 'point' ? <PointPart key={i} part={part} index={i} /> : null
-        )}
-      </ul>
       {parts.map((part, i) => {
-        if (part.kind === 'point') return null
+        if (part.kind === 'text') return <TextPart key={i} part={part} />
+        if (part.kind === 'point') return <PointPart key={i} part={part} index={i} />
         if (part.kind === 'note') return <NotePart key={i} part={part} />
         if (part.kind === 'table') return <TablePart key={i} part={part} />
         if (part.kind === 'equation') return <EquationPart key={i} part={part} />
